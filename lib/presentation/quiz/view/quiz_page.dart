@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../shared/theme/app_spacing.dart';
+import '../../shared/widgets/widgets.dart';
 import '../viewmodel/quiz_state.dart';
 import '../viewmodel/quiz_view_model.dart';
 
@@ -16,27 +18,39 @@ class QuizPage extends ConsumerWidget {
     final args = (subjectId: subjectId, mode: mode);
     final async = ref.watch(quizViewModelProvider(args));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(_modeTitle(mode))),
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('불러오기 실패: $e')),
-        data: (state) {
-          if (state.isEmpty) return const _EmptyView();
-          if (state.finished) {
-            return _ResultView(
-              state: state,
-              onRetry: () => ref.invalidate(quizViewModelProvider(args)),
-            );
-          }
-          return _QuestionView(args: args, state: state);
-        },
+    return async.when(
+      loading: () => AppScaffold(
+        title: modeTitle(mode),
+        body: const Center(child: CircularProgressIndicator()),
       ),
+      error: (e, _) => AppScaffold(
+        title: modeTitle(mode),
+        body: EmptyState(icon: Icons.error_outline, message: '불러오기 실패\n$e'),
+      ),
+      data: (state) {
+        if (state.isEmpty) {
+          return AppScaffold(
+            title: modeTitle(mode),
+            body: const EmptyState(
+              icon: Icons.inbox_outlined,
+              message: '풀 오답이 없어요.\n먼저 문제를 풀어 오답을 쌓아보세요.',
+            ),
+          );
+        }
+        if (state.finished) {
+          return _ResultView(
+            mode: mode,
+            state: state,
+            onRetry: () => ref.invalidate(quizViewModelProvider(args)),
+          );
+        }
+        return _QuestionView(args: args, state: state);
+      },
     );
   }
 }
 
-String _modeTitle(QuizMode mode) => switch (mode) {
+String modeTitle(QuizMode mode) => switch (mode) {
       QuizMode.normal => '전체 풀이',
       QuizMode.random => '랜덤',
       QuizMode.review => '오답 재풀이',
@@ -52,146 +66,101 @@ class _QuestionView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vm = ref.read(quizViewModelProvider(args).notifier);
     final q = state.current;
+    final correct = state.selected == q.answerIndex;
 
-    return Column(
-      children: [
-        LinearProgressIndicator(value: state.progress),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text('${state.position} / ${state.total}',
-                  style: Theme.of(context).textTheme.labelMedium),
-              const SizedBox(height: 8),
-              Text(q.stem, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 20),
-              for (var i = 0; i < q.choices.length; i++)
-                _ChoiceTile(
-                  label: q.choices[i],
-                  status: _statusFor(i, q),
-                  onTap: state.revealed ? null : () => vm.select(i),
-                ),
-              if (state.revealed) _ExplanationCard(question: q),
-            ],
-          ),
-        ),
-        if (state.revealed)
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: FilledButton(
-                onPressed: vm.next,
-                child: Text(state.isLast ? '결과 보기' : '다음'),
-              ),
+    return AppScaffold(
+      title: modeTitle(args.mode),
+      padBody: false,
+      bottomBar: state.revealed
+          ? PrimaryButton(
+              label: state.isLast ? '결과 보기' : '다음',
+              onPressed: vm.next,
+            )
+          : null,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+            child: ProgressHeader(
+              position: state.position,
+              total: state.total,
+              value: state.progress,
             ),
           ),
-      ],
-    );
-  }
-
-  _ChoiceStatus _statusFor(int i, Question q) {
-    if (!state.revealed) return _ChoiceStatus.idle;
-    if (i == q.answerIndex) return _ChoiceStatus.correct;
-    if (i == state.selected) return _ChoiceStatus.wrong;
-    return _ChoiceStatus.idle;
-  }
-}
-
-enum _ChoiceStatus { idle, correct, wrong }
-
-class _ChoiceTile extends StatelessWidget {
-  final String label;
-  final _ChoiceStatus status;
-  final VoidCallback? onTap;
-  const _ChoiceTile({
-    required this.label,
-    required this.status,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (bg, fg) = switch (status) {
-      _ChoiceStatus.correct => (scheme.primaryContainer, scheme.onPrimaryContainer),
-      _ChoiceStatus.wrong => (scheme.errorContainer, scheme.onErrorContainer),
-      _ChoiceStatus.idle => (scheme.surfaceContainerHighest, scheme.onSurface),
-    };
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Text(label, style: TextStyle(color: fg, fontSize: 16)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ExplanationCard extends StatelessWidget {
-  final Question question;
-  const _ExplanationCard({required this.question});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(top: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('해설', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Text(question.explanation),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResultView extends StatelessWidget {
-  final QuizState state;
-  final VoidCallback onRetry;
-  const _ResultView({required this.state, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('점수', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text('${state.correctCount} / ${state.total}',
-              style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 24),
-          FilledButton.tonal(onPressed: onRetry, child: const Text('다시 풀기')),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('홈으로'),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
+              children: [
+                QuestionCard(
+                  position: state.position,
+                  total: state.total,
+                  type: q.type,
+                  stem: q.stem,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                for (var i = 0; i < q.choices.length; i++)
+                  ChoiceTile(
+                    label: q.choices[i],
+                    status: _statusFor(i, q),
+                    onTap: state.revealed ? null : () => vm.select(i),
+                  ),
+                if (state.revealed) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  AnswerBanner(correct: correct),
+                  const SizedBox(height: AppSpacing.md),
+                  ExplanationCard(explanation: q.explanation),
+                ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+
+  ChoiceStatus _statusFor(int i, Question q) {
+    if (!state.revealed) {
+      return i == state.selected ? ChoiceStatus.selected : ChoiceStatus.idle;
+    }
+    if (i == q.answerIndex) return ChoiceStatus.correct;
+    if (i == state.selected) return ChoiceStatus.wrong;
+    return ChoiceStatus.idle;
+  }
 }
 
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
+class _ResultView extends StatelessWidget {
+  final QuizMode mode;
+  final QuizState state;
+  final VoidCallback onRetry;
+  const _ResultView({
+    required this.mode,
+    required this.state,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('풀 문제가 없습니다.\n(오답 재풀이는 틀린 문제가 있을 때)'));
+    return AppScaffold(
+      title: '결과',
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        children: [
+          ScoreView(correct: state.correctCount, total: state.total),
+        ],
+      ),
+      bottomBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SecondaryButton(label: '다시 풀기', onPressed: onRetry),
+          const SizedBox(height: AppSpacing.sm),
+          SecondaryButton(
+            label: '홈으로',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 }
