@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'data/datasources/local/isar_service.dart';
 import 'di.dart';
-import 'presentation/home/view/home_page.dart';
 import 'presentation/settings/theme_mode_mapper.dart';
 import 'presentation/settings/viewmodel/settings_view_model.dart';
 import 'presentation/shared/theme/app_theme.dart';
@@ -29,13 +28,13 @@ class Deck119App extends ConsumerWidget {
         ref.watch(settingsControllerProvider).valueOrNull?.material ??
             ThemeMode.system;
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: '119덱',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      home: const HomePage(),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

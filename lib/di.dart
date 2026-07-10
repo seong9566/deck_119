@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:isar/isar.dart';
+
+import 'presentation/app_router.dart';
 
 import 'data/datasources/content_data_source.dart';
 import 'data/datasources/local/isar_progress_data_source.dart';
@@ -27,6 +30,9 @@ import 'domain/usecases/submit_answer.dart';
 final isarProvider = Provider<Isar>(
   (ref) => throw UnimplementedError('isarProvider must be overridden in main()'),
 );
+
+/// go_router. ProviderScope 단위로 1개(테스트 격리 + 앱 내 안정).
+final routerProvider = Provider<GoRouter>((ref) => createRouter());
 
 // DataSource
 final _contentDataSourceProvider = Provider((ref) => ContentDataSource());
