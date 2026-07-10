@@ -51,3 +51,10 @@
 - `routerProvider`(ProviderScope 단위 1개 = 테스트 격리). `Deck119App`을 `MaterialApp.router`로 전환. 홈 설정 아이콘·모드 타일은 `context.push(link)`, 결과 "홈으로"는 `context.pop()`.
 - Navigator.push/MaterialPageRoute 제거(홈).
 - 검증: `flutter analyze` 0 · 라우팅 위젯 테스트 3개(설정·풀이·시험 진입) 추가, 기존 테스트 전부 유지(총 25).
+
+## T7 — 결과 오답 리뷰 UI 마감 + 표시명 ✅
+
+- 결과의 인라인 오답 리뷰 카드를 공용 컴포넌트 `ReviewCard`(shared/widgets)로 승격(문항·내 답 ✕·정답 ✓·해설). quiz_page는 이를 조합만 하도록 정리(orphan 위젯 제거).
+- 표시명 "119덱": Android `android:label`, iOS `CFBundleDisplayName` 설정.
+- **앱 아이콘**: 범위 외 — 기본 Flutter 아이콘 유지(BUILD_PLAN §4 T7 명시). 교체하지 않음.
+- 검증: `flutter analyze` 0 · ReviewCard를 디자인 시스템 렌더 테스트에 추가, 시험 결과 오답 리뷰 내용(내 답/정답 텍스트) 검증 강화 · 전체 테스트 통과(25).

@@ -27,6 +27,13 @@ void main() {
       const ProgressHeader(position: 3, total: 25, value: 0.12),
       const ScoreView(correct: 20, total: 25),
       const ModeTile(icon: Icons.list_alt, label: '전체', description: '설명'),
+      const ReviewCard(
+        order: 2,
+        stem: '리뷰 지문',
+        myAnswer: '내가 고른 답',
+        correctAnswer: '진짜 정답',
+        explanation: '리뷰 해설',
+      ),
       const EmptyState(icon: Icons.inbox, message: '비었어요'),
       ThemeRadioGroup(value: ThemeMode.system, onChanged: (_) {}),
     ],

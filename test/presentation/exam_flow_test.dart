@@ -61,10 +61,14 @@ void main() {
     await tester.tap(find.text('제출'));
     await tester.pumpAndSettle();
 
-    // 결과: 2/3, 오답 리뷰에 Q2 노출
+    // 결과: 2/3, 오답 리뷰에 Q2 노출(내 답/정답 포함)
     expect(find.text('2 / 3'), findsOneWidget);
     expect(find.text('오답 리뷰 (1)'), findsOneWidget);
     expect(find.text('Q2 지문'), findsOneWidget);
+    expect(find.text('내 답  '), findsOneWidget);
+    expect(find.text('정답  '), findsOneWidget);
+    expect(find.text('A2 틀림'), findsOneWidget); // 내가 고른 오답
+    expect(find.text('A2 옳음'), findsOneWidget); // 정답
 
     // 일괄 채점으로 오답이 저장됐다(q2).
     expect(await progress.getWrongIds(), {'q2'});
