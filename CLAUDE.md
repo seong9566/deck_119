@@ -12,6 +12,7 @@
 - 언어: 한국어.
 - **의존성**: `docs/BUILD_PLAN.md` §0 허용목록 내에서만 추가. 그 외는 추가하지 말고 대안 구현 또는 스킵 후 `docs/BUILD_LOG.md`에 기록.
 - **콘텐츠 불변**: `assets/content/*.json`의 지문·정답·해설은 검수 완료값 — 수정 금지.
+- **디자인 시스템**: 모든 화면·위젯은 `docs/UI_DESIGN_SYSTEM.md`의 토큰(`shared/theme`)·공용 컴포넌트(`shared/widgets`)만 사용. 색/간격 하드코딩 금지. 파운데이션은 T9에서 구축.
 - **레이어**: `lib/domain`은 Flutter·Isar import 0. `presentation`은 UseCase만 호출. 저장소 교체는 `data/**/impl`에서만.
 - **범위**: MVP Must만(PRD Won't = 검색·북마크·통계 대시보드·클라우드 동기화 — 만들지 말 것).
 - **검증 루프**: 각 태스크 = 구현 → `flutter analyze`(이슈 0) → 관련 테스트 작성·통과. Isar 스키마 변경 시 `dart run build_runner build --delete-conflicting-outputs`.
