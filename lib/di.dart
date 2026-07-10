@@ -4,16 +4,21 @@ import 'package:isar/isar.dart';
 import 'data/datasources/content_data_source.dart';
 import 'data/datasources/local/isar_progress_data_source.dart';
 import 'data/datasources/local/isar_session_data_source.dart';
+import 'data/datasources/local/isar_settings_data_source.dart';
 import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/question_repository_impl.dart';
 import 'data/repositories/session_repository_impl.dart';
+import 'data/repositories/settings_repository_impl.dart';
 import 'domain/repositories/progress_repository.dart';
 import 'domain/repositories/question_repository.dart';
 import 'domain/repositories/session_repository.dart';
+import 'domain/repositories/settings_repository.dart';
 import 'domain/usecases/clear_session.dart';
 import 'domain/usecases/get_question_set.dart';
 import 'domain/usecases/get_resume_info.dart';
+import 'domain/usecases/get_theme_mode.dart';
 import 'domain/usecases/save_session_position.dart';
+import 'domain/usecases/set_theme_mode.dart';
 import 'domain/usecases/submit_answer.dart';
 
 /// 의존성 주입(조립). Presentation은 UseCase만 watch하고 구현을 모른다.
@@ -29,6 +34,8 @@ final _isarProgressDataSourceProvider =
     Provider((ref) => IsarProgressDataSource(ref.watch(isarProvider)));
 final _isarSessionDataSourceProvider =
     Provider((ref) => IsarSessionDataSource(ref.watch(isarProvider)));
+final _isarSettingsDataSourceProvider =
+    Provider((ref) => IsarSettingsDataSource(ref.watch(isarProvider)));
 
 // Repository (port ← impl)
 final questionRepositoryProvider = Provider<QuestionRepository>(
@@ -39,6 +46,9 @@ final progressRepositoryProvider = Provider<ProgressRepository>(
 );
 final sessionRepositoryProvider = Provider<SessionRepository>(
   (ref) => SessionRepositoryImpl(ref.watch(_isarSessionDataSourceProvider)),
+);
+final settingsRepositoryProvider = Provider<SettingsRepository>(
+  (ref) => SettingsRepositoryImpl(ref.watch(_isarSettingsDataSourceProvider)),
 );
 
 // UseCase
@@ -62,4 +72,10 @@ final saveSessionPositionProvider = Provider(
 );
 final clearSessionProvider = Provider(
   (ref) => ClearSession(ref.watch(sessionRepositoryProvider)),
+);
+final getThemeModeProvider = Provider(
+  (ref) => GetThemeMode(ref.watch(settingsRepositoryProvider)),
+);
+final setThemeModeProvider = Provider(
+  (ref) => SetThemeMode(ref.watch(settingsRepositoryProvider)),
 );

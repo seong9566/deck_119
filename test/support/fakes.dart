@@ -1,8 +1,10 @@
+import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/question.dart';
 import 'package:deck_119/domain/entities/subject.dart';
 import 'package:deck_119/domain/repositories/progress_repository.dart';
 import 'package:deck_119/domain/repositories/question_repository.dart';
 import 'package:deck_119/domain/repositories/session_repository.dart';
+import 'package:deck_119/domain/repositories/settings_repository.dart';
 
 /// 테스트용 고정 콘텐츠 저장소.
 class FakeQuestionRepository implements QuestionRepository {
@@ -50,6 +52,18 @@ class FakeSessionRepository implements SessionRepository {
 
   @override
   Future<void> clear(String subjectId) async => _last.remove(subjectId);
+}
+
+/// 테스트용 인메모리 설정 저장소.
+class FakeSettingsRepository implements SettingsRepository {
+  AppThemeMode mode;
+  FakeSettingsRepository([this.mode = AppThemeMode.system]);
+
+  @override
+  Future<AppThemeMode> getThemeMode() async => mode;
+
+  @override
+  Future<void> setThemeMode(AppThemeMode mode) async => this.mode = mode;
 }
 
 /// 3지문 샘플(모두 answerIndex 0). 테스트에서 정/오답을 명시적으로 조합.
