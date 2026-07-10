@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/entities/quiz_mode.dart';
 import '../../../domain/entities/subject.dart';
 import '../../quiz/view/quiz_page.dart';
+import '../../settings/view/settings_page.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
@@ -21,6 +22,15 @@ class HomePage extends ConsumerWidget {
     return AppScaffold(
       title: '119덱',
       padBody: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          tooltip: '설정',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+          ),
+        ),
+      ],
       body: subjectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(

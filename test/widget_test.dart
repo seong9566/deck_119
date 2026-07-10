@@ -14,6 +14,7 @@ void main() {
         overrides: [
           progressRepositoryProvider.overrideWithValue(FakeProgressRepository()),
           sessionRepositoryProvider.overrideWithValue(FakeSessionRepository()),
+          settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
         ],
         child: const Deck119App(),
       ),
