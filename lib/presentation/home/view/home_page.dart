@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/entities/quiz_mode.dart';
 import '../../../domain/entities/subject.dart';
 import '../../quiz/view/quiz_page.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_radius_shape.dart';
+import '../../shared/theme/app_spacing.dart';
+import '../../shared/theme/app_typography.dart';
+import '../../shared/widgets/widgets.dart';
 import '../viewmodel/home_view_model.dart';
 
 class HomePage extends ConsumerWidget {
@@ -13,13 +18,18 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final subjectsAsync = ref.watch(homeViewModelProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('119덱')),
+    return AppScaffold(
+      title: '119덱',
+      padBody: false,
       body: subjectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('불러오기 실패: $e')),
+        error: (e, _) => EmptyState(
+          icon: Icons.error_outline,
+          message: '콘텐츠를 불러오지 못했어요.\n$e',
+        ),
         data: (subjects) => ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
           children: [
             for (final subject in subjects) _SubjectCard(subject: subject),
           ],
@@ -29,54 +39,47 @@ class HomePage extends ConsumerWidget {
   }
 }
 
+/// 홈에 노출할 모드 메타(아이콘·라벨·설명).
+const _modeInfo = <(QuizMode, IconData, String, String)>[
+  (QuizMode.normal, Icons.list_alt, '전체 풀이', '25문항 순서대로'),
+  (QuizMode.random, Icons.shuffle, '랜덤', '무작위 출제'),
+  (QuizMode.review, Icons.replay, '오답 재풀이', '틀린 문제만'),
+  (QuizMode.exam, Icons.assignment_turned_in, '시험 모드', '제한시간 없이 일괄 채점'),
+];
+
 class _SubjectCard extends StatelessWidget {
   final Subject subject;
   const _SubjectCard({required this.subject});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(subject.name,
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            _ModeButton(subject: subject, mode: QuizMode.normal, label: '전체 풀이'),
-            _ModeButton(subject: subject, mode: QuizMode.random, label: '랜덤'),
-            _ModeButton(subject: subject, mode: QuizMode.review, label: '오답 재풀이'),
-            _ModeButton(subject: subject, mode: QuizMode.exam, label: '시험 모드'),
-          ],
-        ),
+    final c = context.colors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: appMdRadius,
+        border: Border.all(color: c.outline),
       ),
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  final Subject subject;
-  final QuizMode mode;
-  final String label;
-  const _ModeButton({
-    required this.subject,
-    required this.mode,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: FilledButton.tonal(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => QuizPage(subjectId: subject.id, mode: mode),
-          ),
-        ),
-        child: Text(label),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(subject.name,
+              style: AppText.titleScreen.copyWith(color: c.textPrimary)),
+          const SizedBox(height: AppSpacing.md),
+          for (final (mode, icon, label, desc) in _modeInfo)
+            ModeTile(
+              icon: icon,
+              label: label,
+              description: desc,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => QuizPage(subjectId: subject.id, mode: mode),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
