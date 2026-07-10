@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../domain/entities/quiz_mode.dart';
 import '../../../domain/entities/subject.dart';
-import '../../quiz/view/quiz_page.dart';
-import '../../settings/view/settings_page.dart';
+import '../../app_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
@@ -26,9 +26,7 @@ class HomePage extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.settings_outlined),
           tooltip: '설정',
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SettingsPage()),
-          ),
+          onPressed: () => context.push(Routes.settings),
         ),
       ],
       body: subjectsAsync.when(
@@ -64,12 +62,10 @@ class _SubjectCard extends ConsumerWidget {
   /// 풀이 화면으로 이동 후 돌아오면 이어풀기 정보를 새로 읽는다.
   Future<void> _open(BuildContext context, WidgetRef ref, QuizMode mode,
       {bool resume = false}) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            QuizPage(subjectId: subject.id, mode: mode, resume: resume),
-      ),
-    );
+    final link = mode == QuizMode.exam
+        ? Routes.examLink(subject.id)
+        : Routes.quizLink(subject.id, mode, resume: resume);
+    await context.push(link);
     ref.invalidate(resumeInfoProvider(subject.id));
   }
 

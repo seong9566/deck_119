@@ -44,3 +44,10 @@
 - `SettingsController`(AsyncNotifier)가 저장값 로드·변경 즉시 반영·영속. `Deck119App`을 ConsumerWidget으로 바꿔 `MaterialApp.themeMode` 바인딩. `/settings` 화면(ThemeRadioGroup 라디오 + 앱 정보). 홈 우상단 설정 아이콘.
 - 홈 스모크 테스트에 fake Settings 주입, 앱 레벨 테스트는 fake Question 주입(로딩 스피너로 인한 pumpAndSettle 타임아웃 회피).
 - 검증: `flutter analyze` 0 · Isar 설정 테스트 3개(기본 system·재오픈 유지·단일 레코드) + 설정 위젯 테스트 3개(선택→저장·저장값 반영·즉시 반영) 통과.
+
+## T6 — 라우팅 정리(go_router) ✅
+
+- `go_router` 추가(허용목록). `createRouter()`로 `/`·`/quiz`(normal·random·review, mode 쿼리)·`/exam`·`/settings` 라우트 구성. subjectId·mode·resume는 쿼리 파라미터로 전달(`Routes.quizLink/examLink`).
+- `routerProvider`(ProviderScope 단위 1개 = 테스트 격리). `Deck119App`을 `MaterialApp.router`로 전환. 홈 설정 아이콘·모드 타일은 `context.push(link)`, 결과 "홈으로"는 `context.pop()`.
+- Navigator.push/MaterialPageRoute 제거(홈).
+- 검증: `flutter analyze` 0 · 라우팅 위젯 테스트 3개(설정·풀이·시험 진입) 추가, 기존 테스트 전부 유지(총 25).

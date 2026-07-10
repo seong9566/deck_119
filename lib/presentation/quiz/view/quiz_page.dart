@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/quiz_mode.dart';
@@ -193,7 +194,7 @@ class _ResultView extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           SecondaryButton(
             label: '홈으로',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
           ),
         ],
       ),
