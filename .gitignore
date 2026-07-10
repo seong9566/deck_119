@@ -48,3 +48,6 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+
+# Gradle 빌드 산출물
+/android/build/
