@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# 환경/비밀 (.env.example 템플릿만 커밋, 실제 .env 는 커밋 금지)
+.env
+.env.*
+!.env.example
