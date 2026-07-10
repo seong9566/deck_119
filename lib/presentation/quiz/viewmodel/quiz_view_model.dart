@@ -4,20 +4,28 @@ import '../../../di.dart';
 import '../../../domain/entities/quiz_mode.dart';
 import 'quiz_state.dart';
 
-/// 풀이 세션 인자(과목 + 모드). 레코드 값 동등성으로 family 키가 된다.
-typedef QuizArgs = ({String subjectId, QuizMode mode});
+/// 풀이 세션 인자(과목 + 모드 + 이어풀기 여부). 레코드 값 동등성으로 family 키.
+typedef QuizArgs = ({String subjectId, QuizMode mode, bool resume});
 
 final quizViewModelProvider = AsyncNotifierProvider.autoDispose
     .family<QuizViewModel, QuizState, QuizArgs>(QuizViewModel.new);
 
 /// 풀이 ViewModel — 모드에 맞는 세트를 로드하고 선택·다음·제출 의도를 처리한다.
-/// UseCase만 호출하고 Repository 구현·저장소를 모른다(MVVM + 클린 아키텍처).
+/// normal 모드는 이어풀기 세션을 복원(build)·저장(next)·삭제(finish)한다.
 class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> {
   @override
   Future<QuizState> build(QuizArgs arg) async {
     final questions =
         await ref.watch(getQuestionSetProvider)(arg.subjectId, arg.mode);
-    return QuizState.initial(questions, arg.mode);
+
+    var startIndex = 0;
+    if (arg.mode == QuizMode.normal && arg.resume) {
+      final info = await ref.watch(getResumeInfoProvider)(arg.subjectId);
+      if (info != null && info.lastIndex < questions.length) {
+        startIndex = info.lastIndex;
+      }
+    }
+    return QuizState.initial(questions, arg.mode).copyWith(index: startIndex);
   }
 
   /// 선택지 응답.
@@ -41,7 +49,7 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
 
   /// 다음 문항으로.
   /// - exam: 채점 없이 전진(마지막 문항은 submit으로만 종료).
-  /// - normal 계열: 해설을 본 뒤에만 전진, 마지막이면 종료.
+  /// - normal 계열: 해설을 본 뒤에만 전진, 마지막이면 종료. normal은 세션 저장/삭제.
   void next() {
     final s = state.value;
     if (s == null || s.finished) return;
@@ -55,8 +63,11 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     if (!s.revealed) return;
     if (s.isLast) {
       state = AsyncData(s.copyWith(finished: true));
+      _clearSessionIfNormal();
     } else {
-      state = AsyncData(s.copyWith(index: s.index + 1, revealed: false));
+      final nextIndex = s.index + 1;
+      state = AsyncData(s.copyWith(index: nextIndex, revealed: false));
+      _saveSessionIfNormal(nextIndex);
     }
   }
 
@@ -67,9 +78,20 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
 
     final submitAnswer = ref.read(submitAnswerProvider);
     for (var i = 0; i < s.questions.length; i++) {
-      // 미응답(-1)은 오답으로 채점·기록된다.
       await submitAnswer(s.questions[i], s.answers[i] ?? -1);
     }
     state = AsyncData(s.copyWith(finished: true));
+  }
+
+  void _saveSessionIfNormal(int index) {
+    if (arg.mode == QuizMode.normal) {
+      ref.read(saveSessionPositionProvider)(arg.subjectId, index);
+    }
+  }
+
+  void _clearSessionIfNormal() {
+    if (arg.mode == QuizMode.normal) {
+      ref.read(clearSessionProvider)(arg.subjectId);
+    }
   }
 }
