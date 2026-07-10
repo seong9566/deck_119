@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# PM↔코드 태스크 라이프사이클: 커밋 trailer 'Closes: Txx' → done, 브랜치 ID → wip.
+# 소스 오브 트루스: PM vault의 wiki/projects/<project>/tasks/*.md 프론트매터.
+# 설치: git init 후 `git config core.hooksPath .githooks`
+VAULT=/Users/ihyeonseong/Desktop/obsidian_workspace/personal_dev_wiki
+msg=$(git log -1 --pretty=%B)
+for id in $(echo "$msg" | grep -oE 'Closes:[[:space:]]*T[0-9]+' | grep -oE 'T[0-9]+'); do
+  bash "$VAULT/.claude/scripts/task.sh" done "$id" >/dev/null 2>&1 || true
+done
+id=$(git branch --show-current 2>/dev/null | grep -oE 'T[0-9]+' | head -1)
+[ -n "$id" ] && ! echo "$msg" | grep -q 'Closes:' && bash "$VAULT/.claude/scripts/task.sh" wip "$id" --section code >/dev/null 2>&1 || true

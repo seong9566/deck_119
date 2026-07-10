@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "VAULT=/Users/ihyeonseong/Desktop/obsidian_workspace/personal_dev_wiki; id=$(git branch --show-current 2>/dev/null | grep -oE 'T[0-9]+' | head -1); [ -n \"$id\" ] && bash \"$VAULT/.claude/scripts/task.sh\" wip \"$id\" --section code >/dev/null 2>&1; true"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(flutter:*)",
+      "Bash(dart:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  }
+}
