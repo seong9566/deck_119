@@ -68,7 +68,12 @@ int _wrongEntryEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.questionId.length * 3;
-  bytesCount += 3 + object.subjectId.length * 3;
+  {
+    final value = object.subjectId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -93,7 +98,7 @@ WrongEntry _wrongEntryDeserialize(
   object.addedAtMs = reader.readLong(offsets[0]);
   object.id = id;
   object.questionId = reader.readString(offsets[1]);
-  object.subjectId = reader.readString(offsets[2]);
+  object.subjectId = reader.readStringOrNull(offsets[2]);
   return object;
 }
 
@@ -109,7 +114,7 @@ P _wrongEntryDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -548,8 +553,26 @@ extension WrongEntryQueryFilter
     });
   }
 
+  QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition>
+      subjectIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'subjectId',
+      ));
+    });
+  }
+
+  QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition>
+      subjectIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'subjectId',
+      ));
+    });
+  }
+
   QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition> subjectIdEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -563,7 +586,7 @@ extension WrongEntryQueryFilter
 
   QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition>
       subjectIdGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -578,7 +601,7 @@ extension WrongEntryQueryFilter
   }
 
   QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition> subjectIdLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -593,8 +616,8 @@ extension WrongEntryQueryFilter
   }
 
   QueryBuilder<WrongEntry, WrongEntry, QAfterFilterCondition> subjectIdBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -822,7 +845,7 @@ extension WrongEntryQueryProperty
     });
   }
 
-  QueryBuilder<WrongEntry, String, QQueryOperations> subjectIdProperty() {
+  QueryBuilder<WrongEntry, String?, QQueryOperations> subjectIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'subjectId');
     });

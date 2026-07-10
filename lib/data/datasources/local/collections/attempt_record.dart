@@ -8,16 +8,19 @@ class AttemptRecord {
   Id id = Isar.autoIncrement;
 
   late String questionId;
-  late String subjectId;
-
-  /// 선택한 선택지 인덱스(0-based).
-  late int selectedIndex;
 
   late bool isCorrect;
 
-  /// 풀이 모드 문자열(QuizMode.name).
-  late String mode;
-
   /// 시도 시각(epoch ms).
   late int timestampMs;
+
+  // 아래 필드는 ProgressRepository 인터페이스 경계(§2, 시그니처 불변)에서
+  // 전달되지 않아 MVP에서는 null. 통계(Could)용 스키마 자리만 유지. (BUILD_LOG T2)
+  String? subjectId;
+
+  /// 선택한 선택지 인덱스(0-based).
+  int? selectedIndex;
+
+  /// 풀이 모드 문자열(QuizMode.name).
+  String? mode;
 }

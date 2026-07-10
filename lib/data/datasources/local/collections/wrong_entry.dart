@@ -11,7 +11,9 @@ class WrongEntry {
   @Index(unique: true, replace: true)
   late String questionId;
 
-  late String subjectId;
+  /// 과목 id. ProgressRepository 인터페이스 경계에서 전달되지 않으면 null
+  /// (MVP 오답 재풀이는 questionId만 사용 — BUILD_LOG T2 참고).
+  String? subjectId;
 
   /// 오답 등록 시각(epoch ms).
   late int addedAtMs;
