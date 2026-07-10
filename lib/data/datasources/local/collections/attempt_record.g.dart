@@ -68,9 +68,19 @@ int _attemptRecordEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.mode.length * 3;
+  {
+    final value = object.mode;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.questionId.length * 3;
-  bytesCount += 3 + object.subjectId.length * 3;
+  {
+    final value = object.subjectId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -97,10 +107,10 @@ AttemptRecord _attemptRecordDeserialize(
   final object = AttemptRecord();
   object.id = id;
   object.isCorrect = reader.readBool(offsets[0]);
-  object.mode = reader.readString(offsets[1]);
+  object.mode = reader.readStringOrNull(offsets[1]);
   object.questionId = reader.readString(offsets[2]);
-  object.selectedIndex = reader.readLong(offsets[3]);
-  object.subjectId = reader.readString(offsets[4]);
+  object.selectedIndex = reader.readLongOrNull(offsets[3]);
+  object.subjectId = reader.readStringOrNull(offsets[4]);
   object.timestampMs = reader.readLong(offsets[5]);
   return object;
 }
@@ -115,13 +125,13 @@ P _attemptRecordDeserializeProp<P>(
     case 0:
       return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     default:
@@ -289,8 +299,26 @@ extension AttemptRecordQueryFilter
     });
   }
 
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      modeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'mode',
+      ));
+    });
+  }
+
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      modeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'mode',
+      ));
+    });
+  }
+
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition> modeEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -304,7 +332,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       modeGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -320,7 +348,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       modeLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -335,8 +363,8 @@ extension AttemptRecordQueryFilter
   }
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition> modeBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -561,7 +589,25 @@ extension AttemptRecordQueryFilter
   }
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
-      selectedIndexEqualTo(int value) {
+      selectedIndexIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'selectedIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      selectedIndexIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'selectedIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      selectedIndexEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'selectedIndex',
@@ -572,7 +618,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       selectedIndexGreaterThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -586,7 +632,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       selectedIndexLessThan(
-    int value, {
+    int? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -600,8 +646,8 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       selectedIndexBetween(
-    int lower,
-    int upper, {
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -617,8 +663,26 @@ extension AttemptRecordQueryFilter
   }
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      subjectIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'subjectId',
+      ));
+    });
+  }
+
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
+      subjectIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'subjectId',
+      ));
+    });
+  }
+
+  QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       subjectIdEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -632,7 +696,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       subjectIdGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -648,7 +712,7 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       subjectIdLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -664,8 +728,8 @@ extension AttemptRecordQueryFilter
 
   QueryBuilder<AttemptRecord, AttemptRecord, QAfterFilterCondition>
       subjectIdBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1047,7 +1111,7 @@ extension AttemptRecordQueryProperty
     });
   }
 
-  QueryBuilder<AttemptRecord, String, QQueryOperations> modeProperty() {
+  QueryBuilder<AttemptRecord, String?, QQueryOperations> modeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'mode');
     });
@@ -1059,13 +1123,13 @@ extension AttemptRecordQueryProperty
     });
   }
 
-  QueryBuilder<AttemptRecord, int, QQueryOperations> selectedIndexProperty() {
+  QueryBuilder<AttemptRecord, int?, QQueryOperations> selectedIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'selectedIndex');
     });
   }
 
-  QueryBuilder<AttemptRecord, String, QQueryOperations> subjectIdProperty() {
+  QueryBuilder<AttemptRecord, String?, QQueryOperations> subjectIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'subjectId');
     });

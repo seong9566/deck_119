@@ -1,19 +1,24 @@
 import '../../domain/repositories/progress_repository.dart';
-import '../datasources/local_progress_data_source.dart';
+import '../datasources/local/isar_progress_data_source.dart';
 
+/// 진척·오답 저장소 구현(Isar). 인터페이스 시그니처는 유지(Presentation 영향 0).
 class ProgressRepositoryImpl implements ProgressRepository {
-  final LocalProgressDataSource _local;
+  final IsarProgressDataSource _local;
 
   ProgressRepositoryImpl(this._local);
 
   @override
-  Future<void> recordAttempt(String questionId, {required bool correct}) async {
-    _local.record(questionId, correct: correct);
+  Future<void> recordAttempt(String questionId, {required bool correct}) {
+    return _local.record(
+      questionId,
+      correct: correct,
+      nowMs: DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   @override
-  Future<Set<String>> getWrongIds() async => _local.wrongIds();
+  Future<Set<String>> getWrongIds() => _local.wrongIds();
 
   @override
-  Future<void> clearWrong(String questionId) async => _local.clear(questionId);
+  Future<void> clearWrong(String questionId) => _local.clear(questionId);
 }
