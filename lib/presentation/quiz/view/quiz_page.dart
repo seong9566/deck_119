@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
+import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/widgets.dart';
 import '../viewmodel/quiz_state.dart';
 import '../viewmodel/quiz_view_model.dart';
@@ -39,7 +42,6 @@ class QuizPage extends ConsumerWidget {
         }
         if (state.finished) {
           return _ResultView(
-            mode: mode,
             state: state,
             onRetry: () => ref.invalidate(quizViewModelProvider(args)),
           );
@@ -71,12 +73,7 @@ class _QuestionView extends ConsumerWidget {
     return AppScaffold(
       title: modeTitle(args.mode),
       padBody: false,
-      bottomBar: state.revealed
-          ? PrimaryButton(
-              label: state.isLast ? '결과 보기' : '다음',
-              onPressed: vm.next,
-            )
-          : null,
+      bottomBar: _bottomBar(vm),
       body: Column(
         children: [
           Padding(
@@ -104,7 +101,9 @@ class _QuestionView extends ConsumerWidget {
                   ChoiceTile(
                     label: q.choices[i],
                     status: _statusFor(i, q),
-                    onTap: state.revealed ? null : () => vm.select(i),
+                    onTap: (state.isExam || !state.revealed)
+                        ? () => vm.select(i)
+                        : null,
                   ),
                 if (state.revealed) ...[
                   const SizedBox(height: AppSpacing.sm),
@@ -120,8 +119,24 @@ class _QuestionView extends ConsumerWidget {
     );
   }
 
+  /// 하단 액션. exam은 항상 다음/제출, normal 계열은 채점 후에만 노출.
+  Widget? _bottomBar(QuizViewModel vm) {
+    if (state.isExam) {
+      return PrimaryButton(
+        label: state.isLast ? '제출' : '다음',
+        onPressed: state.isLast ? vm.submit : vm.next,
+      );
+    }
+    return state.revealed
+        ? PrimaryButton(
+            label: state.isLast ? '결과 보기' : '다음',
+            onPressed: vm.next,
+          )
+        : null;
+  }
+
   ChoiceStatus _statusFor(int i, Question q) {
-    if (!state.revealed) {
+    if (state.isExam || !state.revealed) {
       return i == state.selected ? ChoiceStatus.selected : ChoiceStatus.idle;
     }
     if (i == q.answerIndex) return ChoiceStatus.correct;
@@ -131,23 +146,36 @@ class _QuestionView extends ConsumerWidget {
 }
 
 class _ResultView extends StatelessWidget {
-  final QuizMode mode;
   final QuizState state;
   final VoidCallback onRetry;
-  const _ResultView({
-    required this.mode,
-    required this.state,
-    required this.onRetry,
-  });
+  const _ResultView({required this.state, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
+    final wrong = state.wrongIndexes;
     return AppScaffold(
       title: '결과',
+      padBody: false,
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
         children: [
           ScoreView(correct: state.correctCount, total: state.total),
+          const SizedBox(height: AppSpacing.xl),
+          _ReviewLabel(wrongCount: wrong.length),
+          const SizedBox(height: AppSpacing.md),
+          if (wrong.isEmpty)
+            const EmptyState(
+              icon: Icons.emoji_events_outlined,
+              message: '틀린 문제가 없어요. 완벽해요!',
+            )
+          else
+            for (final i in wrong)
+              _WrongReviewCard(
+                order: i + 1,
+                question: state.questions[i],
+                myAnswer: state.answers[i],
+              ),
         ],
       ),
       bottomBar: Column(
@@ -161,6 +189,97 @@ class _ResultView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReviewLabel extends StatelessWidget {
+  final int wrongCount;
+  const _ReviewLabel({required this.wrongCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Text(
+      wrongCount == 0 ? '오답 리뷰' : '오답 리뷰 ($wrongCount)',
+      style: AppText.label.copyWith(color: c.textSecondary),
+    );
+  }
+}
+
+/// 결과의 오답 리뷰 카드(문항·내 답·정답·해설). T7에서 다듬는다.
+class _WrongReviewCard extends StatelessWidget {
+  final int order;
+  final Question question;
+  final int? myAnswer;
+  const _WrongReviewCard({
+    required this.order,
+    required this.question,
+    required this.myAnswer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final myText = (myAnswer == null)
+        ? '미응답'
+        : question.choices[myAnswer!];
+    final answerText = question.choices[question.answerIndex];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: appMdRadius,
+        border: Border.all(color: c.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$order번',
+              style: AppText.label.copyWith(color: c.textSecondary)),
+          const SizedBox(height: AppSpacing.sm),
+          Text(question.stem,
+              style: AppText.stem.copyWith(color: c.textPrimary)),
+          const SizedBox(height: AppSpacing.md),
+          _AnswerRow(icon: Icons.close, color: c.wrong, label: '내 답', value: myText),
+          const SizedBox(height: AppSpacing.xs),
+          _AnswerRow(
+              icon: Icons.check, color: c.correct, label: '정답', value: answerText),
+          const SizedBox(height: AppSpacing.md),
+          ExplanationCard(explanation: question.explanation),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnswerRow extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  const _AnswerRow({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: AppSpacing.sm),
+        Text('$label  ', style: AppText.label.copyWith(color: c.textSecondary)),
+        Expanded(
+          child: Text(value, style: AppText.body.copyWith(color: c.textPrimary)),
+        ),
+      ],
     );
   }
 }
