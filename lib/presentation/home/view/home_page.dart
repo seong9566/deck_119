@@ -47,13 +47,27 @@ const _modeInfo = <(QuizMode, IconData, String, String)>[
   (QuizMode.exam, Icons.assignment_turned_in, '시험 모드', '제한시간 없이 일괄 채점'),
 ];
 
-class _SubjectCard extends StatelessWidget {
+class _SubjectCard extends ConsumerWidget {
   final Subject subject;
   const _SubjectCard({required this.subject});
 
+  /// 풀이 화면으로 이동 후 돌아오면 이어풀기 정보를 새로 읽는다.
+  Future<void> _open(BuildContext context, WidgetRef ref, QuizMode mode,
+      {bool resume = false}) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            QuizPage(subjectId: subject.id, mode: mode, resume: resume),
+      ),
+    );
+    ref.invalidate(resumeInfoProvider(subject.id));
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final resume = ref.watch(resumeInfoProvider(subject.id)).valueOrNull;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -68,16 +82,21 @@ class _SubjectCard extends StatelessWidget {
           Text(subject.name,
               style: AppText.titleScreen.copyWith(color: c.textPrimary)),
           const SizedBox(height: AppSpacing.md),
+          if (resume != null)
+            ModeTile(
+              icon: Icons.play_circle_outline,
+              label: '이어풀기',
+              description: '정규 · ${resume.position} / ${resume.total}',
+              highlighted: true,
+              onTap: () =>
+                  _open(context, ref, QuizMode.normal, resume: true),
+            ),
           for (final (mode, icon, label, desc) in _modeInfo)
             ModeTile(
               icon: icon,
               label: label,
               description: desc,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => QuizPage(subjectId: subject.id, mode: mode),
-                ),
-              ),
+              onTap: () => _open(context, ref, mode),
             ),
         ],
       ),

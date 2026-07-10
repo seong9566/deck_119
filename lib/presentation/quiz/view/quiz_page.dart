@@ -14,11 +14,19 @@ import '../viewmodel/quiz_view_model.dart';
 class QuizPage extends ConsumerWidget {
   final String subjectId;
   final QuizMode mode;
-  const QuizPage({super.key, required this.subjectId, required this.mode});
+
+  /// normal 모드에서 마지막 위치부터 이어풀지 여부.
+  final bool resume;
+  const QuizPage({
+    super.key,
+    required this.subjectId,
+    required this.mode,
+    this.resume = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final args = (subjectId: subjectId, mode: mode);
+    final args = (subjectId: subjectId, mode: mode, resume: resume);
     final async = ref.watch(quizViewModelProvider(args));
 
     return async.when(

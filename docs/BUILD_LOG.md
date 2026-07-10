@@ -28,3 +28,12 @@
 - `QuizState`를 문항별 선택(`answers`) 기반으로 재구성. `correctCount`·`wrongIndexes`는 파생. normal 계열은 선택 즉시 채점(`revealed`), exam은 채점을 숨기고 재선택 허용·`다음`으로만 전진·마지막에 `제출`.
 - `QuizViewModel.submit()`: 전 문항 일괄 채점·기록(미응답은 `-1`→오답 처리). 결과 화면에 **오답 리뷰**(문항·내 답/정답·해설) 추가(normal 결과에도 공통 적용). 오답 리뷰 카드는 토큰으로 구현, T7에서 공용 컴포넌트로 마감 예정.
 - 검증: `flutter analyze` 0 · 시험 플로우 위젯 테스트 2개(응답→제출→점수·오답 리뷰, 미응답 오답 채점) 통과.
+
+## T4 — 이어풀기 세션 저장복원 ✅
+
+- 신규 `SessionRepository` 포트 + `IsarSessionDataSource`/`SessionRepositoryImpl`(key=`"$subjectId:normal"`, upsert). UseCase 3개(GetResumeInfo·SaveSessionPosition·ClearSession) + DI.
+- `QuizArgs`에 `resume` 추가(family 키). normal 모드: build에서 `resume`면 마지막 위치 복원, next마다 저장, finish 시 삭제. exam/random/review는 세션 미사용.
+- 홈: `resumeInfoProvider`(과목별)로 세션 있으면 상단 강조 이어풀기 타일(`정규 · N/총`) 노출, 풀이에서 돌아오면 invalidate로 갱신.
+- **결정**: "전체 풀이"(resume=false)는 index 0부터 새로 시작(첫 next에서 세션 덮어씀), "이어풀기"(resume=true)만 마지막 위치부터. 두 진입점을 명확히 분리.
+- 홈 스모크 테스트를 Isar 비의존(fake Session/Progress 주입)으로 보강.
+- 검증: `flutter analyze` 0 · Isar 세션 테스트 3개(저장→복원·삭제·과목분리) + 이어풀기 위젯 테스트 4개 통과.
