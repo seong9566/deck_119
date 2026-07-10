@@ -10,6 +10,7 @@ export 'explanation_card.dart';
 export 'mode_tile.dart';
 export 'progress_header.dart';
 export 'question_card.dart';
+export 'review_card.dart';
 export 'score_view.dart';
 export 'theme_radio_group.dart';
 export 'type_badge.dart';
