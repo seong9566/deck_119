@@ -58,3 +58,25 @@
 - 표시명 "119덱": Android `android:label`, iOS `CFBundleDisplayName` 설정.
 - **앱 아이콘**: 범위 외 — 기본 Flutter 아이콘 유지(BUILD_PLAN §4 T7 명시). 교체하지 않음.
 - 검증: `flutter analyze` 0 · ReviewCard를 디자인 시스템 렌더 테스트에 추가, 시험 결과 오답 리뷰 내용(내 답/정답 텍스트) 검증 강화 · 전체 테스트 통과(25).
+
+## T8 — 최종 검증 + 완료 보고 ✅ (APK 빌드 스모크는 환경 이슈로 미완)
+
+### 완료
+- **`flutter analyze` = 이슈 0.**
+- **`flutter test` = 25개 전부 통과.** (Isar 유닛 10 + 위젯/플로우 13 + 디자인시스템 2)
+  - 데이터: 오답·진척(4), 세션(3), 설정(3)
+  - 화면/플로우: 홈 스모크(1), 시험(2), 이어풀기(4), 설정(3), 라우팅(3)
+  - 디자인 시스템 라이트/다크 렌더(2)
+- MVP Must 전부 구현: 4모드 진입·즉시채점/해설·오답 즉시제거·오답 재풀이·**Isar 영속화**(오답/진척/세션/설정)·**시험 일괄채점**·**결과 오답 리뷰**·**이어풀기**·**다크모드 토글+영속**·**go_router 5화면**·디자인 시스템 토큰/공용 컴포넌트·표시명 119덱.
+
+### 미완/스킵 (정직 보고)
+- **`flutter build apk --debug` 실패** — 앱 코드가 아니라 의존성/툴체인 버전 불일치.
+  - 원인: 환경 AGP `com.android.application 9.0.1`(최신)인데, 허용목록으로 고정된 `isar_flutter_libs 3.1.0+1`은 AGP 7.3.1 기준이라 Gradle `namespace` 미선언(`Namespace not specified`) + `compileSdkVersion 30`. AGP 8+에서 요구되는 namespace가 없어 구성 단계에서 실패.
+  - 조치 안 한 이유: 의존성 변경은 허용목록/승인 필요(§0·가드레일)라 isar 업그레이드/교체 불가. namespace를 Gradle 훅으로 강제 주입해도 오래된 compileSdk 등 후속 AGP 9 비호환이 연쇄될 위험이 커 "가능하면" 범위인 빌드 스모크에 무리한 해킹을 넣지 않음.
+  - 권장 해소: (승인 시) `isar_flutter_libs`를 namespace를 선언한 유지보수 포크/상위 버전으로 교체하거나, Android AGP를 8.x 계열로 낮춰 정합. 또는 루트 `android/build.gradle.kts`에 isar 모듈 한정 namespace 주입 훅 추가(별도 승인/검증 필요).
+- **iOS 빌드**: 이 비대화형 환경에 시뮬레이터/코드사인 없음 → 미시도.
+- **앱 아이콘**: 범위 외(T7) — 기본 유지.
+- **Isar 테스트 네이티브 코어**: `build/isar/libisar.dylib` 사전 다운로드 필요(T2 참조). 신규 체크아웃/CI에서 이 바이너리 없으면 Isar 유닛 테스트가 코어 로드 실패.
+
+### 결론
+코드 품질 게이트(analyze 0 · 테스트 25 통과)와 MVP Must 기능은 완주. Android 릴리스 빌드는 의존성 버전 정합(승인 필요) 후 가능.
