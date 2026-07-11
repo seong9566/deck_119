@@ -12,52 +12,61 @@
 - **한 손 조작**: 주요 액션은 하단 고정(SafeArea), 엄지 도달권.
 - **라이트/다크 동등**: 모든 토큰에 다크 값. 어느 쪽도 임시방편 아님.
 
-## 2. 컬러 토큰
+## 2. 컬러 토큰 (DESIGN_HANDOFF §1 확정값 — 목업 추출)
 
-`ColorScheme.fromSeed(seedColor: brand)` 기반 + 커스텀 `AppColors` ThemeExtension으로 의미색 보강.
+`ColorScheme.fromSeed(seedColor: brand)` 기반 + 커스텀 `AppColors` ThemeExtension으로 의미색 보강. 라이트/다크 **동등**.
 
 ### 브랜드/액센트
-- `brand` = **#D32F2F** (소방 레드). 용도: 상단바 타이틀·진행바 fill·선택 링·**주요 버튼(FilledButton)**. 과용 금지.
+- `brand` = **#C6402E**(라이트) / **#E86B4E**(다크). 용도: 상단바·진행바 fill·선택 링·**주요 버튼(FilledButton)**·이어풀기. 과용 금지.
+- `brandInk` #A8331F / #F08770 (브랜드 텍스트·아이콘) · `brandTint` #F8EAE5 / #3A241D (이어풀기 배경·연면).
 
-### 중립 표면 (살짝 웜 바이어스 = 액센트와 정합)
+### 중립 표면·경계
 | 토큰 | Light | Dark |
 |---|---|---|
-| background | #FAFAF9 | #131211 |
-| surface(카드) | #FFFFFF | #1C1B1A |
-| surfaceVariant | #F2F1EF | #26251F→#26241F |
-| outline(경계) | #E4E2DE | #3A3833 |
-| textPrimary | #1A1917 | #ECEAE6 |
-| textSecondary | #6B6862 | #A5A199 |
+| background(bg) | #F4F5F7 | #131417 |
+| surface(카드) | #FFFFFF | #1B1D20 |
+| surfaceVariant(surfaceAlt) | #F5F6F8 | #232529 |
+| outline | #E3E5E9 | #2E3136 |
+| outlineStrong | #CFD2D8 | #3C4046 |
+| textPrimary(text) | #181A1D | #E9EAEC |
+| textSecondary | #5C6068 | #9DA2AA |
+| textTertiary | #9297A0 | #6E727A |
 
 ### 의미색 (AppColors ThemeExtension)
 | 토큰 | Light | Dark | 용도 |
 |---|---|---|---|
-| correct / onCorrect | #2E7D32 / #E7F4E9 | #7FD48B / #17301A | 정답 타일·배너 |
-| wrong / onWrong | #C62828 / #FBE9E9 | #F1A0A0 / #331717 | 오답 타일·배너 |
-| selectedRing | brand | brand | 채점 전 선택 표시 |
+| correct / correctInk / onCorrect(tint) | #157347 / #0E5A38 / #E6F3EC | #4FC189 / #74D3A3 / #1C3226 | 정답 타일·배너 |
+| wrong / wrongInk / onWrong(tint) | #BE3455 / #9E2846 / #F9E9ED | #E86A82 / #F08D9F / #37222A | 오답 타일·배너 |
+| sel / selTint | #181A1D / #EBEDF0 | #E9EAEC / #26282C | 시험모드 중립 선택·진행바 트랙·배지 배경 |
+| selectedRing | brand | brand | 선택 표시 |
+| shadow | rgba(0,0,0,.05) | rgba(0,0,0,.4) | 카드 미세 그림자 |
 
-> ⚠️ 오답 레드(#C62828)와 브랜드 레드(#D32F2F)는 톤을 분리하고, 오답은 **항상 ✕ 아이콘**과 함께 → 버튼(브랜드)과 혼동 방지. 주요 버튼은 하단 채움 버튼으로만 등장.
+> ⚠️ 오답(#BE3455 마젠타톤)과 브랜드(#C6402E 오렌지레드)는 톤을 분리하고, 오답은 **항상 ✕ 아이콘**과 함께 → 버튼(브랜드)과 혼동 방지.
 
-## 3. 타이포그래피
+## 3. 타이포그래피 — Pretendard 번들(4 weight: 400/500/600/700)
 
-시스템 폰트(한글은 OS 폰트로 렌더). 스케일 고정 — 임의 크기 금지.
-> (선택·후속) Pretendard를 에셋 폰트로 번들하면 완성도↑ — 의존성 아님(pubspec fonts). MVP는 시스템 폰트.
+`ThemeData.fontFamily: 'Pretendard'`로 전역 상속. 스케일 고정 — 임의 크기 금지. (800 요청 시 등록된 700로 근사.)
 
-| 역할 | 크기/굵기/행간 | 쓰임 |
+| 역할 | 크기/굵기/행간/자간 | 쓰임 |
 |---|---|---|
-| score | 34 / w700 | 결과 점수 |
-| titleScreen | 22 / w700 | 화면 제목 |
-| **stem** | 18 / w600 / 1.5 | **문항 지문(핵심)** |
-| choice | 16 / w500 | 선택지 |
-| body | 15 / w400 / 1.6 | 해설 본문 |
-| label | 12 / w600 / +0.5sp | 라벨("해설"·"N/총"·배지) |
-| caption | 13 / w400 | 보조(secondary color) |
+| score | 56 / w800 / 1.0 | 결과 점수 |
+| scoreUnit | 28 / w700 | 점수 단위(" / N", textTertiary) |
+| titleScreen | 22 / w800 | 화면 제목(설정·과목) |
+| logo | 26 / w800 | 홈 로고 |
+| subjectName | 22 / w800 | 홈 선택 과목명 |
+| **stem** | 19 / w600 / 1.55 / -0.01em | **문항 지문(핵심)** |
+| choice | 16 / w600 | 선택지 |
+| oxGlyph | 46 / w700 | OX 큰 글자 |
+| body | 15 / w400 / 1.7 | 해설·본문 |
+| label(labelStrong) | 12 / w700 / +0.06em | 라벨·배지·섹션헤더 |
+| tab | 11 / w500(활성 w700) | 하단 탭 라벨 |
+| caption | 13 / w500 | 보조(secondary color) |
 
 ## 4. 간격·모서리·그림자
 
-- **spacing**(4 배수): `xs 4 · sm 8 · md 12 · lg 16 · xl 24 · xxl 32`. 화면 좌우 패딩 = lg(16).
-- **radius**: `sm 8 · md 12 · lg 16 · pill 999`. 카드·타일·버튼 기본 md(12).
-- **elevation**: 기본 **평면**(그림자 대신 1px outline). 떠 보여야 할 때만 elevation 1. (차분함)
+- **spacing**(4 배수): `xs 4 · sm 8 · md 12 · lg 16 · xl 20 · xxl 24 · huge 32`. 화면 좌우 패딩 = xl(20).
+- **radius**: `badge 8 · md 12 · tile 14 · card 16 · lg 16 · ox 20 · iconBadge 28 · pill 999`.
+- **elevation**: 기본 **평면** + 미세 `shadow` 토큰(그림자 남발 금지). 대부분 1px outline.
 
 ## 5. 공용 컴포넌트 (shared/widgets)
 

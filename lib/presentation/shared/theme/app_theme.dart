@@ -25,6 +25,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: 'Pretendard',
       colorScheme: scheme,
       scaffoldBackgroundColor: c.background,
       extensions: [c],
