@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../di.dart';
+import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/question_collection.dart';
 import '../../../domain/entities/resume_info.dart';
@@ -54,5 +55,54 @@ final subjectStatsProvider =
     total: qs.length,
     mcq: qs.where((q) => q.type == QuestionType.mcq).length,
     ox: qs.where((q) => q.type == QuestionType.ox).length,
+  );
+});
+
+/// 홈 대시보드 진척 통계(정답률·연속학습·푼 문항 수). 풀이에서 돌아오면 invalidate.
+final progressStatsProvider = FutureProvider.autoDispose<ProgressStats>((ref) {
+  return ref.watch(progressRepositoryProvider).getStats();
+});
+
+/// 홈 대시보드 오답 개수. 풀이에서 돌아오면 invalidate.
+final wrongCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final ids = await ref.watch(progressRepositoryProvider).getWrongIds();
+  return ids.length;
+});
+
+/// 홈 "이어풀기" 카드(가장 최근 세션 → 표시용 세트 정보). 없으면 null.
+class RecentSessionCard {
+  final String collectionId;
+  final String name;
+  final int position; // 1-based
+  final int total;
+  const RecentSessionCard({
+    required this.collectionId,
+    required this.name,
+    required this.position,
+    required this.total,
+  });
+}
+
+final recentSessionCardProvider =
+    FutureProvider.autoDispose<RecentSessionCard?>((ref) async {
+  final sessions =
+      await ref.watch(sessionRepositoryProvider).recentSessions(limit: 1);
+  if (sessions.isEmpty) return null;
+  final s = sessions.first;
+  final collections =
+      await ref.watch(questionRepositoryProvider).getCollections();
+  QuestionCollection? col;
+  for (final c in collections) {
+    if (c.id == s.collectionId) {
+      col = c;
+      break;
+    }
+  }
+  if (col == null) return null; // 세트 구성 변경 등으로 매칭 실패
+  return RecentSessionCard(
+    collectionId: col.id,
+    name: col.name,
+    position: s.lastIndex + 1,
+    total: col.count,
   );
 });

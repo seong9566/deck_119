@@ -38,4 +38,22 @@ class IsarSessionDataSource {
       await _isar.sessionStates.deleteByKey(_key(subjectId));
     });
   }
+
+  /// 최근 갱신순 세션(홈 이어풀기용). subjectId = 컬렉션 id.
+  Future<List<({String subjectId, int lastIndex, int updatedAtMs})>> recent(
+      int limit) async {
+    final rows = await _isar.sessionStates
+        .where()
+        .sortByUpdatedAtMsDesc()
+        .limit(limit)
+        .findAll();
+    return [
+      for (final r in rows)
+        (
+          subjectId: r.subjectId,
+          lastIndex: r.lastIndex,
+          updatedAtMs: r.updatedAtMs,
+        ),
+    ];
+  }
 }

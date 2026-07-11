@@ -1,3 +1,4 @@
+import '../../domain/entities/progress_stats.dart';
 import '../../domain/repositories/progress_repository.dart';
 import '../datasources/local/isar_progress_data_source.dart';
 
@@ -21,4 +22,15 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   @override
   Future<void> clearWrong(String questionId) => _local.clear(questionId);
+
+  @override
+  Future<ProgressStats> getStats() async {
+    final s = await _local.stats();
+    return ProgressStats(
+      attempts: s.attempts,
+      correct: s.correct,
+      distinctAttempted: s.distinct,
+      streakDays: s.streak,
+    );
+  }
 }

@@ -1,3 +1,4 @@
+import '../../domain/entities/recent_session.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../datasources/local/isar_session_data_source.dart';
 
@@ -27,4 +28,17 @@ class SessionRepositoryImpl implements SessionRepository {
 
   @override
   Future<void> clear(String subjectId) => _local.clear(subjectId);
+
+  @override
+  Future<List<RecentSession>> recentSessions({int limit = 5}) async {
+    final rows = await _local.recent(limit);
+    return [
+      for (final r in rows)
+        RecentSession(
+          collectionId: r.subjectId,
+          lastIndex: r.lastIndex,
+          updatedAtMs: r.updatedAtMs,
+        ),
+    ];
+  }
 }
