@@ -10,32 +10,57 @@ import '../../shared/widgets/widgets.dart';
 import '../theme_mode_mapper.dart';
 import '../viewmodel/settings_view_model.dart';
 
+/// 설정(DESIGN_HANDOFF §2.2). 하단 탭 IA의 세 번째 탭.
+/// 테마 라디오 + 앱 정보(버전·오픈소스 라이선스). 문의하기 없음(§3-3).
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final mode =
         ref.watch(settingsControllerProvider).valueOrNull ?? AppThemeMode.system;
 
-    return AppScaffold(
-      title: '설정',
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        children: [
-          const _SectionLabel('테마'),
-          const SizedBox(height: AppSpacing.sm),
-          ThemeRadioGroup(
-            value: mode.material,
-            onChanged: (tm) =>
-                ref.read(settingsControllerProvider.notifier).setMode(tm.app),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          const _SectionLabel('앱 정보'),
-          const SizedBox(height: AppSpacing.sm),
-          const _InfoTile(label: '앱 이름', value: '119덱'),
-          const _InfoTile(label: '설명', value: '소방공채 심화·OX 문제'),
-        ],
+    return Scaffold(
+      backgroundColor: c.background,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.huge),
+          children: [
+            Text('설정', style: AppText.titleScreen.copyWith(color: c.textPrimary)),
+            const SizedBox(height: AppSpacing.xl),
+            const _SectionLabel('테마'),
+            const SizedBox(height: AppSpacing.sm + 2),
+            ThemeRadioGroup(
+              value: mode.material,
+              onChanged: (tm) =>
+                  ref.read(settingsControllerProvider.notifier).setMode(tm.app),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            const _SectionLabel('앱 정보'),
+            const SizedBox(height: AppSpacing.sm + 2),
+            _InfoCard(
+              children: [
+                const _InfoRow(label: '버전', value: '1.0.0'),
+                _InfoRow(
+                  label: '오픈소스 라이선스',
+                  trailing: Icon(Icons.chevron_right, color: c.textTertiary),
+                  onTap: () => showLicensePage(
+                    context: context,
+                    applicationName: '119덱',
+                    applicationVersion: '1.0.0',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            Center(
+              child: Text('119덱 · 소방관계법규',
+                  style: AppText.caption.copyWith(color: c.textTertiary)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -47,34 +72,73 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: AppText.label.copyWith(color: context.colors.textSecondary));
+    return Padding(
+      padding: const EdgeInsets.only(left: AppSpacing.xs),
+      child: Text(text,
+          style: AppText.label.copyWith(
+              color: context.colors.textTertiary, letterSpacing: 0.3)),
+    );
   }
 }
 
-class _InfoTile extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoTile({required this.label, required this.value});
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+  const _InfoCard({required this.children});
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: appMdRadius,
+        borderRadius: appCardRadius,
         border: Border.all(color: c.outline),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Text(label, style: AppText.choice.copyWith(color: c.textPrimary)),
-          const Spacer(),
-          Text(value, style: AppText.body.copyWith(color: c.textSecondary)),
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: c.outline),
+            children[i],
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  const _InfoRow({
+    required this.label,
+    this.value,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label,
+                  style: AppText.choice.copyWith(color: c.textPrimary)),
+            ),
+            if (value != null)
+              Text(value!,
+                  style: AppText.caption.copyWith(color: c.textTertiary)),
+            ?trailing,
+          ],
+        ),
       ),
     );
   }

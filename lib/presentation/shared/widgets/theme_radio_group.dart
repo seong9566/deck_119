@@ -25,9 +25,10 @@ class ThemeRadioGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.surface,
-        borderRadius: appMdRadius,
+        borderRadius: appCardRadius,
         border: Border.all(color: c.outline),
       ),
       child: Column(
@@ -61,17 +62,27 @@ class _ThemeRadioRow extends StatelessWidget {
     final c = context.colors;
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         child: Row(
           children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? c.brand : c.textSecondary,
+            Expanded(
+              child: Text(label,
+                  style: AppText.choice.copyWith(color: c.textPrimary)),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Text(label, style: AppText.choice.copyWith(color: c.textPrimary)),
+            // 라디오: 선택 시 brand 7px 링, 미선택 시 outlineStrong 2px 링.
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? c.brand : c.outlineStrong,
+                  width: selected ? 7 : 2,
+                ),
+              ),
+            ),
           ],
         ),
       ),

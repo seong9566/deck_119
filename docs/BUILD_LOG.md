@@ -93,3 +93,13 @@
 - pubspec에 Pretendard 4 weight(400/500/600/700) 등록(승인 예외). otf 파일은 assets/fonts/에 기존 존재. 목업은 900까지 쓰나 번들 파일은 4개뿐 → 800/900 요청은 700로 근사(Flutter 최근접 매칭).
 - 검증: `flutter pub get` OK · `flutter analyze` 0 · `flutter test` 전부 통과(색값 하드 검증 테스트 없어 기대값 갱신 불필요).
 - **인프라 메모(주의)**: PM `task.sh`가 ID만으로 매칭 → toss-자동매매 프로젝트에도 T10이 있어 `wip T10 --force`가 toss T10(done)을 건드림. 즉시 toss를 done으로 원복하고, 소방 T10은 태스크 파일을 직접 편집해 상태 전환. post-commit 훅의 `done T10`도 동일 모호성으로 소방을 자동 done 못 함 → 수동 done 처리. 이후 T11~T16도 태스크 파일 직접 편집으로 상태 관리 예정.
+
+## T15 — 결과/설정/빈·에러 리스킨 ✅
+
+- **결과**(`quiz_page.dart _ResultView`): AppScaffold → 풀스크린 Scaffold(상단 "채점 결과"+닫기✕ · 중앙 ScoreView · 오답 리뷰 헤더["오답 리뷰"+"N문항" pill] · ReviewCard 목록 · 하단 고정 홈으로/다시 풀기[3:1]). 만점 시 오답 대신 `_PerfectCard`(correctTint). ScoreView에 결과 태그(만점=correct"만점·완벽 ✓" / 그외=selTint"수고했어요 ↗") 반영.
+- **설정**(`settings_page.dart`): 화면 제목 "설정" · 섹션 "테마"(ThemeRadioGroup) · 섹션 "앱 정보" 카드(버전 1.0.0 · **오픈소스 라이선스** → `showLicensePage` 실제 구현) · 푸터 "119덱 · 소방관계법규". §3-3대로 "문의하기" 없음. 기존 "앱 이름/설명" 정보타일은 목업 IA로 대체.
+- **테마 라디오**(`theme_radio_group.dart`): 아이콘 라디오 → 라벨 좌·우측 커스텀 링(선택=brand 7px, 미선택=outlineStrong 2px), 행 min-height 56, 카드 clip.
+- **에러/로딩/빈 상태**: 이미 T14 셸(`_QuizScaffold`)에 구현됨. 에러 카피는 §3-2대로 오프라인 번들에 맞게("문제를 불러오지 못했어요 / 다시 시도해 주세요", 원인=문항 데이터 열기 실패). 오답 빈 상태 "풀 오답이 없어요"(correctTint ✓).
+- **테스트**: 결과 헤더 카피 변경("오답 리뷰 (1)" → "오답 리뷰" + "1문항")으로 `exam_flow_test.dart` 기대값만 갱신(§3-4, 로직 불변).
+- **미포함(surgical)**: 작업 트리의 `ios/` 변경(Pods 참조·Main.storyboard 재포맷)은 Xcode/flutter 툴링 자동생성분으로 T15와 무관 → 커밋에서 제외.
+- 검증: `flutter analyze` 0 · `flutter test` 26개 전부 통과.
