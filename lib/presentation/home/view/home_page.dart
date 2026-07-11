@@ -33,7 +33,10 @@ class HomePage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
           icon: Icons.error_outline,
-          message: '콘텐츠를 불러오지 못했어요.\n$e',
+          iconColor: context.colors.brand,
+          iconBg: context.colors.brandTint,
+          title: '콘텐츠를 불러오지 못했어요',
+          description: '문항 데이터를 여는 중 문제가 생겼어요.\n앱을 다시 실행해 주세요.',
         ),
         data: (subjects) => ListView(
           padding: const EdgeInsets.fromLTRB(

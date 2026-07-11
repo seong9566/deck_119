@@ -6,7 +6,7 @@ import '../theme/app_radius_shape.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-/// 문항 유형 배지(UI_DESIGN_SYSTEM §5). mcq="객관식"(중립) / ox="OX"(brand 외곽선).
+/// 문항 유형 배지(DESIGN_HANDOFF §2.2). selTint pill · labelStrong · textSecondary.
 class TypeBadge extends StatelessWidget {
   final QuestionType type;
   const TypeBadge({super.key, required this.type});
@@ -14,18 +14,16 @@ class TypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final isOx = type == QuestionType.ox;
-    final color = isOx ? c.brand : c.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+          horizontal: AppSpacing.sm + 2, vertical: AppSpacing.xs + 1),
       decoration: BoxDecoration(
-        borderRadius: appPillRadius,
-        border: Border.all(color: color),
+        color: c.selTint,
+        borderRadius: appSmRadius,
       ),
       child: Text(
-        isOx ? 'OX' : '객관식',
-        style: AppText.label.copyWith(color: color),
+        type == QuestionType.ox ? 'OX' : '객관식',
+        style: AppText.label.copyWith(color: c.textSecondary),
       ),
     );
   }
