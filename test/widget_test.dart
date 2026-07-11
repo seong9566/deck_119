@@ -23,7 +23,12 @@ void main() {
     // 초기 로딩 스피너
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // 에셋 JSON 로드 완료 후 선택한 과목 카드·모드 2×2 노출
+    // 실제 에셋 JSON(rootBundle) 로드는 실제 파일 I/O라 fake-async pump로는
+    // 진행되지 않는다. runAsync 안에서만 완료되므로 여기서 로드를 마치게 한 뒤
+    // pumpAndSettle로 반영한다. (문항 수가 늘어 파일이 커져도 안전.)
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
     await tester.pumpAndSettle();
     expect(find.text('선택한 과목'), findsOneWidget);
     expect(find.text('소방관계법규'), findsOneWidget);
