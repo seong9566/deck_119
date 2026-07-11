@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../di.dart';
 import '../../../domain/entities/question.dart';
+import '../../../domain/entities/question_collection.dart';
 import '../../../domain/entities/resume_info.dart';
 import '../../../domain/entities/subject.dart';
 
@@ -15,6 +16,12 @@ class HomeViewModel extends AsyncNotifier<List<Subject>> {
     return ref.watch(questionRepositoryProvider).getSubjects();
   }
 }
+
+/// 선택 가능한 문제 세트 목록(원형 회차별·심화·전체).
+final collectionsProvider =
+    FutureProvider<List<QuestionCollection>>((ref) async {
+  return ref.watch(questionRepositoryProvider).getCollections();
+});
 
 /// 과목별 이어풀기 정보(있으면 홈에 진입점 노출). 풀이에서 돌아오면 invalidate.
 final resumeInfoProvider =

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../domain/entities/quiz_mode.dart';
 import 'home/view/home_page.dart';
+import 'home/view/set_mode_page.dart';
 import 'quiz/view/quiz_page.dart';
 import 'settings/view/settings_page.dart';
 import 'shell/root_tab_scaffold.dart';
@@ -33,6 +34,18 @@ GoRouter createRouter() {
                 builder: (_, _) => const SettingsPage()),
           ]),
         ],
+      ),
+      // 세트(문제집) 모드 선택 — 풀스크린 push.
+      GoRoute(
+        path: Routes.set,
+        parentNavigatorKey: shellKey,
+        builder: (_, state) {
+          final p = state.uri.queryParameters;
+          return SetModePage(
+            collectionId: p['id']!,
+            title: p['name'] ?? '문제집',
+          );
+        },
       ),
       // 풀스크린(탭바 없음) — 상위 네비게이터에 push.
       GoRoute(
@@ -68,9 +81,15 @@ QuizMode _parseMode(String? name) => QuizMode.values.firstWhere(
 abstract final class Routes {
   static const home = '/';
   static const subjects = '/subjects';
+  static const set = '/set';
   static const quiz = '/quiz';
   static const exam = '/exam';
   static const settings = '/settings';
+
+  /// 세트(문제집) 모드 선택 링크.
+  static String setLink(String collectionId, String name) =>
+      Uri(path: set, queryParameters: {'id': collectionId, 'name': name})
+          .toString();
 
   /// 풀이(normal·random·review) 링크.
   static String quizLink(String subjectId, QuizMode mode,

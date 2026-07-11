@@ -13,7 +13,6 @@ void main() {
   ];
 
   Future<void> pumpApp(WidgetTester tester) async {
-    // 모드 타일이 세로로 쌓여 기본 뷰포트보다 길어질 수 있으므로 표면을 키운다.
     await tester.binding.setSurfaceSize(const Size(500, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
@@ -31,31 +30,37 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // fake는 세트 하나(전체)만 제공. 전체 세트를 열어 모드로 진입한다.
+  Future<void> openAllSet(WidgetTester tester) async {
+    await tester.tap(find.text('전체'));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('홈 → 설정 탭 → /settings', (tester) async {
     await pumpApp(tester);
-    expect(find.text('테스트과목'), findsOneWidget);
+    expect(find.text('소방관계법규'), findsOneWidget); // 세트 목록 화면 타이틀
 
-    // 하단 탭바의 설정 탭으로 이동.
     await tester.tap(find.text('설정'));
     await tester.pumpAndSettle();
 
     expect(find.text('테마'), findsOneWidget); // 설정 화면 섹션 라벨
   });
 
-  testWidgets('홈 → 과목 탭 → /subjects', (tester) async {
+  testWidgets('홈 → 과목 탭 → 세트 목록', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('과목'));
     await tester.pumpAndSettle();
 
-    expect(find.text('풀 과목을 선택하세요'), findsOneWidget);
-    expect(find.text('테스트과목'), findsOneWidget);
-    // 문항 수 실측 노출(fake 2문항).
-    expect(find.text('총 2문항'), findsOneWidget);
+    // 과목 탭도 동일한 세트 목록을 보여준다.
+    expect(find.text('소방관계법규'), findsOneWidget);
+    expect(find.text('전체'), findsOneWidget);
   });
 
-  testWidgets('홈 → 전체 풀이 → /quiz', (tester) async {
+  testWidgets('홈 → 전체 세트 → 전체 풀이 → /quiz', (tester) async {
     await pumpApp(tester);
+    await openAllSet(tester);
+    expect(find.text('선택한 문제집'), findsOneWidget);
 
     await tester.tap(find.text('전체 풀이'));
     await tester.pumpAndSettle();
@@ -63,15 +68,15 @@ void main() {
     expect(find.text('Q1 지문'), findsOneWidget);
   });
 
-  testWidgets('홈 → 시험 모드 → /exam', (tester) async {
+  testWidgets('홈 → 전체 세트 → 시험 모드 → /exam', (tester) async {
     await pumpApp(tester);
+    await openAllSet(tester);
 
     final examTile = find.text('시험 모드');
     await tester.ensureVisible(examTile);
     await tester.tap(examTile);
     await tester.pumpAndSettle();
 
-    // 시험은 제출 버튼(즉시채점 숨김) 흐름
     expect(find.text('Q1 지문'), findsOneWidget);
     expect(find.text('다음'), findsOneWidget);
   });

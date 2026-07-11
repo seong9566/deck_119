@@ -1,5 +1,6 @@
 import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/question.dart';
+import 'package:deck_119/domain/entities/question_collection.dart';
 import 'package:deck_119/domain/entities/subject.dart';
 import 'package:deck_119/domain/repositories/progress_repository.dart';
 import 'package:deck_119/domain/repositories/question_repository.dart';
@@ -16,7 +17,13 @@ class FakeQuestionRepository implements QuestionRepository {
       const [Subject(id: 's1', name: '테스트과목')];
 
   @override
-  Future<List<Question>> getQuestions(String subjectId) async => questions;
+  Future<List<QuestionCollection>> getCollections() async => [
+        QuestionCollection(
+            id: 's1', name: '전체', group: '전체', count: questions.length),
+      ];
+
+  @override
+  Future<List<Question>> getQuestions(String collectionId) async => questions;
 }
 
 /// 테스트용 인메모리 진척 저장소.
