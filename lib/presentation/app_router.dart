@@ -1,22 +1,43 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/entities/quiz_mode.dart';
 import 'home/view/home_page.dart';
 import 'quiz/view/quiz_page.dart';
 import 'settings/view/settings_page.dart';
+import 'shell/root_tab_scaffold.dart';
+import 'subjects/view/subjects_page.dart';
 
-/// 앱 라우트(BUILD_PLAN §3). 화면 5개를 go_router로 구성.
-/// `/quiz`는 normal·random·review 공용(mode 쿼리), `/exam`은 시험 전용.
+/// 앱 라우트(DESIGN_HANDOFF §2.1). 하단 탭바 IA:
+/// ShellRoute 3탭(홈·과목·설정, 탭바 표시) + 풀스크린 풀이·시험(탭바 없음).
 GoRouter createRouter() {
+  final shellKey = GlobalKey<NavigatorState>();
   return GoRouter(
     initialLocation: Routes.home,
+    navigatorKey: shellKey,
     routes: [
-      GoRoute(
-        path: Routes.home,
-        builder: (_, _) => const HomePage(),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => RootTabScaffold(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+                path: Routes.subjects,
+                builder: (_, _) => const SubjectsPage()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+                path: Routes.settings,
+                builder: (_, _) => const SettingsPage()),
+          ]),
+        ],
       ),
+      // 풀스크린(탭바 없음) — 상위 네비게이터에 push.
       GoRoute(
         path: Routes.quiz,
+        parentNavigatorKey: shellKey,
         builder: (_, state) {
           final p = state.uri.queryParameters;
           return QuizPage(
@@ -28,14 +49,11 @@ GoRouter createRouter() {
       ),
       GoRoute(
         path: Routes.exam,
+        parentNavigatorKey: shellKey,
         builder: (_, state) => QuizPage(
           subjectId: state.uri.queryParameters['subjectId']!,
           mode: QuizMode.exam,
         ),
-      ),
-      GoRoute(
-        path: Routes.settings,
-        builder: (_, _) => const SettingsPage(),
       ),
     ],
   );
@@ -49,6 +67,7 @@ QuizMode _parseMode(String? name) => QuizMode.values.firstWhere(
 /// 라우트 경로·링크 빌더.
 abstract final class Routes {
   static const home = '/';
+  static const subjects = '/subjects';
   static const quiz = '/quiz';
   static const exam = '/exam';
   static const settings = '/settings';

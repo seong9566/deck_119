@@ -22,13 +22,6 @@ class HomePage extends ConsumerWidget {
     return AppScaffold(
       title: '119덱',
       padBody: false,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          tooltip: '설정',
-          onPressed: () => context.push(Routes.settings),
-        ),
-      ],
       body: subjectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
