@@ -15,16 +15,13 @@ void main() {
 
   final sample = Column(
     children: [
-      const QuestionCard(
-        position: 1,
-        total: 25,
-        type: QuestionType.mcq,
-        stem: '지문 샘플',
-      ),
+      const QuestionCard(type: QuestionType.mcq, stem: '지문 샘플'),
       const ChoiceTile(label: '선택지', status: ChoiceStatus.correct),
+      const ChoiceTile(label: '흐림 선택지', status: ChoiceStatus.dimmed),
       const AnswerBanner(correct: false),
-      const ExplanationCard(explanation: '해설 본문'),
-      const ProgressHeader(position: 3, total: 25, value: 0.12),
+      const ExplanationCard(correct: true, explanation: '해설 본문'),
+      const ProgressHeader(
+          position: 3, total: 25, value: 0.12, modeLabel: '정규'),
       const ScoreView(correct: 20, total: 25),
       const ModeTile(icon: Icons.list_alt, label: '전체', description: '설명'),
       const ReviewCard(
@@ -34,7 +31,7 @@ void main() {
         correctAnswer: '진짜 정답',
         explanation: '리뷰 해설',
       ),
-      const EmptyState(icon: Icons.inbox, message: '비었어요'),
+      const EmptyState(icon: Icons.inbox, title: '비었어요', description: '설명'),
       ThemeRadioGroup(value: ThemeMode.system, onChanged: (_) {}),
     ],
   );

@@ -36,15 +36,24 @@ class QuizPage extends ConsumerWidget {
       ),
       error: (e, _) => AppScaffold(
         title: modeTitle(mode),
-        body: EmptyState(icon: Icons.error_outline, message: '불러오기 실패\n$e'),
+        body: EmptyState(
+          icon: Icons.error_outline,
+          iconColor: context.colors.brand,
+          iconBg: context.colors.brandTint,
+          title: '문제를 불러오지 못했어요',
+          description: '문항 데이터를 여는 중 문제가 생겼어요.\n다시 시도해 주세요.',
+        ),
       ),
       data: (state) {
         if (state.isEmpty) {
           return AppScaffold(
             title: modeTitle(mode),
-            body: const EmptyState(
-              icon: Icons.inbox_outlined,
-              message: '풀 오답이 없어요.\n먼저 문제를 풀어 오답을 쌓아보세요.',
+            body: EmptyState(
+              icon: Icons.check,
+              iconColor: context.colors.correct,
+              iconBg: context.colors.onCorrect,
+              title: '풀 오답이 없어요',
+              description: '먼저 문제를 풀어 오답을 쌓아보세요.',
             ),
           );
         }
@@ -98,12 +107,7 @@ class _QuestionView extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
               children: [
-                QuestionCard(
-                  position: state.position,
-                  total: state.total,
-                  type: q.type,
-                  stem: q.stem,
-                ),
+                QuestionCard(type: q.type, stem: q.stem),
                 const SizedBox(height: AppSpacing.lg),
                 for (var i = 0; i < q.choices.length; i++)
                   ChoiceTile(
@@ -114,10 +118,9 @@ class _QuestionView extends ConsumerWidget {
                         : null,
                   ),
                 if (state.revealed) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  AnswerBanner(correct: correct),
                   const SizedBox(height: AppSpacing.md),
-                  ExplanationCard(explanation: q.explanation),
+                  ExplanationCard(
+                      correct: correct, explanation: q.explanation),
                 ],
               ],
             ),
@@ -149,7 +152,7 @@ class _QuestionView extends ConsumerWidget {
     }
     if (i == q.answerIndex) return ChoiceStatus.correct;
     if (i == state.selected) return ChoiceStatus.wrong;
-    return ChoiceStatus.idle;
+    return ChoiceStatus.dimmed;
   }
 }
 
@@ -173,9 +176,12 @@ class _ResultView extends StatelessWidget {
           _ReviewLabel(wrongCount: wrong.length),
           const SizedBox(height: AppSpacing.md),
           if (wrong.isEmpty)
-            const EmptyState(
-              icon: Icons.emoji_events_outlined,
-              message: '틀린 문제가 없어요. 완벽해요!',
+            EmptyState(
+              icon: Icons.check,
+              iconColor: context.colors.correct,
+              iconBg: context.colors.onCorrect,
+              title: '전부 맞혔어요, 완벽합니다',
+              description: '복습할 오답이 없습니다.\n다음 세트로 넘어가세요.',
             )
           else
             for (final i in wrong)

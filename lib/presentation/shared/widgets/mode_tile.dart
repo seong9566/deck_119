@@ -5,8 +5,8 @@ import '../theme/app_radius_shape.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-/// 홈 모드 진입 타일(UI_DESIGN_SYSTEM §5). 아이콘 + 라벨 + 짧은 설명.
-/// [highlighted]면 이어풀기 강조(brand 외곽선 + surfaceVariant 배경).
+/// 홈 모드 진입 타일(DESIGN_HANDOFF §2.2). 2×2 그리드 셀: 아이콘(brand) + 제목 +
+/// 설명, min-height 112, radius tile, 미세 그림자. [highlighted]면 brandTint 강조.
 class ModeTile extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -26,45 +26,37 @@ class ModeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final accent = highlighted ? c.brand : c.textSecondary;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Material(
-        color: highlighted ? c.surfaceVariant : c.surface,
-        borderRadius: appMdRadius,
-        child: InkWell(
-          borderRadius: appMdRadius,
-          onTap: onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: appMdRadius,
-              border: Border.all(
-                color: highlighted ? c.brand : c.outline,
-                width: highlighted ? 2 : 1,
-              ),
+    return Material(
+      color: highlighted ? c.brandTint : c.surface,
+      borderRadius: appTileRadius,
+      child: InkWell(
+        borderRadius: appTileRadius,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: appTileRadius,
+            border: Border.all(
+              color: highlighted ? c.brand : c.outline,
+              width: highlighted ? 1.5 : 1,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Row(
-                children: [
-                  Icon(icon, color: accent),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(label,
-                            style: AppText.choice.copyWith(color: c.textPrimary)),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(description,
-                            style:
-                                AppText.caption.copyWith(color: c.textSecondary)),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, color: c.textSecondary),
-                ],
-              ),
+            boxShadow: highlighted ? null : appCardShadow(c),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 112),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: c.brand, size: 24),
+                const SizedBox(height: AppSpacing.md),
+                Text(label,
+                    style: AppText.choice
+                        .copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+                const SizedBox(height: AppSpacing.xs - 1),
+                Text(description,
+                    style: AppText.caption
+                        .copyWith(color: c.textSecondary, height: 1.4)),
+              ],
             ),
           ),
         ),
