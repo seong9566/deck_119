@@ -16,6 +16,10 @@ class SessionState {
   /// 마지막으로 머문 문항 인덱스(0-based).
   late int lastIndex;
 
+  /// 문항별 선택 인덱스(길이 = 문항수, -1 = 미응답).
+  /// 이어풀기 시 이전 세션의 선택·해설을 복원한다.
+  late List<int> answers;
+
   /// 갱신 시각(epoch ms).
   late int updatedAtMs;
 }

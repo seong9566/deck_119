@@ -16,17 +16,12 @@ class QuizState {
   /// 세션 종료(결과 화면).
   final bool finished;
 
-  /// 이전 문항으로 갈 수 있는 하한(이어풀기 시작 위치). 그 앞 문항은
-  /// 이번 세션에서 응답하지 않았으므로 되돌아가지 않는다.
-  final int minIndex;
-
   const QuizState({
     required this.questions,
     required this.mode,
     required this.answers,
     this.index = 0,
     this.finished = false,
-    this.minIndex = 0,
   });
 
   factory QuizState.initial(List<Question> questions, QuizMode mode) => QuizState(
@@ -46,8 +41,8 @@ class QuizState {
   /// exam은 마지막 일괄 채점이라 항상 false.
   bool get revealed => !isExam && answers[index] != null;
 
-  /// 이전 문항으로 이동 가능한가(세션 시작 위치보다 뒤일 때).
-  bool get canGoPrev => index > minIndex;
+  /// 이전 문항으로 이동 가능한가(첫 문항이 아닐 때).
+  bool get canGoPrev => index > 0;
 
   int get total => questions.length;
   int get position => index + 1;
@@ -73,7 +68,6 @@ class QuizState {
     int? index,
     List<int?>? answers,
     bool? finished,
-    int? minIndex,
   }) {
     return QuizState(
       questions: questions,
@@ -81,7 +75,6 @@ class QuizState {
       index: index ?? this.index,
       answers: answers ?? this.answers,
       finished: finished ?? this.finished,
-      minIndex: minIndex ?? this.minIndex,
     );
   }
 }

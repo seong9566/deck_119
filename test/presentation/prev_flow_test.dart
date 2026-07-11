@@ -105,15 +105,31 @@ void main() {
     expect(find.text('q1 해설'), findsOneWidget);
   });
 
-  testWidgets('normal + resume: 이어푼 시작 위치보다 앞으로는 못 간다', (tester) async {
+  testWidgets('normal + resume: 이어푼 뒤 이전 문항으로 돌아가면 복원된 답·해설이 보인다',
+      (tester) async {
     final session = FakeSessionRepository();
-    await session.save('s1', 2); // Q3(index 2)부터 이어풀기
+    // Q1·Q2를 정답으로 풀어둔 상태에서 Q3(index 2)부터 이어풀기
+    await session.save('s1', 2, [0, 0, null]);
 
     await tester.pumpWidget(normalHost(session, resume: true));
     await tester.pumpAndSettle();
 
-    // 시작 문항(Q3)에서는 그 앞이 이번 세션 미응답이라 이전 버튼 없음
+    // 시작 문항(Q3)에서도 이전 버튼이 노출된다(이전에 푼 문항으로 되돌아갈 수 있음)
     expect(find.text('Q3 지문'), findsOneWidget);
+    expect(find.text('이전'), findsOneWidget);
+
+    // 이전 → Q2: 이전 세션의 선택이 복원되어 해설이 다시 보인다
+    await tester.tap(find.text('이전'));
+    await tester.pumpAndSettle();
+    expect(find.text('Q2 지문'), findsOneWidget);
+    expect(find.text('해설'), findsOneWidget);
+    expect(find.text('q2 해설'), findsOneWidget);
+
+    // 이전 → Q1: 여기서도 복원, 첫 문항이라 이전 버튼은 사라진다
+    await tester.tap(find.text('이전'));
+    await tester.pumpAndSettle();
+    expect(find.text('Q1 지문'), findsOneWidget);
+    expect(find.text('q1 해설'), findsOneWidget);
     expect(find.text('이전'), findsNothing);
   });
 }

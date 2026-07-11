@@ -46,12 +46,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Q2 지문'), findsOneWidget);
-    expect(await session.getLastIndex('s1'), 1);
+    expect((await session.load('s1'))?.lastIndex, 1);
   });
 
   testWidgets('normal + resume: 저장된 위치부터 이어푼다', (tester) async {
     final session = FakeSessionRepository();
-    await session.save('s1', 2); // Q3(index 2)부터
+    await session.save('s1', 2, [0, 0, null]); // Q3(index 2)부터
 
     await tester.pumpWidget(host(session: session, resume: true));
     await tester.pumpAndSettle();
@@ -63,7 +63,7 @@ void main() {
 
   testWidgets('normal: 마지막 문항 완료 시 세션이 삭제된다', (tester) async {
     final session = FakeSessionRepository();
-    await session.save('s1', 2);
+    await session.save('s1', 2, [0, 0, null]);
 
     await tester.pumpWidget(host(session: session, resume: true));
     await tester.pumpAndSettle();
@@ -74,7 +74,7 @@ void main() {
     await tester.tap(find.text('결과 보기'));
     await tester.pumpAndSettle();
 
-    expect(await session.getLastIndex('s1'), isNull);
+    expect(await session.load('s1'), isNull);
   });
 
   test('QuizArgs는 resume 값으로 구분된다(family 키)', () {

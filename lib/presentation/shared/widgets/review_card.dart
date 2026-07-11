@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/entities/question.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius_shape.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'statement_breakdown.dart';
 
 /// 결과 오답 리뷰 카드(DESIGN_HANDOFF §2.2). 번호칩 + 지문 / 내 답(✕)·정답(✓) 칩 /
-/// 점선 위 해설.
+/// 점선 위 해설. 개수형([breakdown] 있음)이면 해설을 보기별 O/X로 렌더.
 class ReviewCard extends StatelessWidget {
   final int order;
   final String stem;
   final String myAnswer;
   final String correctAnswer;
   final String explanation;
+
+  /// 개수형 보기별 판정(비어 있으면 단일 텍스트 해설).
+  final List<StatementVerdict> breakdown;
 
   const ReviewCard({
     super.key,
@@ -21,6 +26,7 @@ class ReviewCard extends StatelessWidget {
     required this.myAnswer,
     required this.correctAnswer,
     required this.explanation,
+    this.breakdown = const [],
   });
 
   @override
@@ -86,9 +92,12 @@ class ReviewCard extends StatelessWidget {
             child: _DashedLine(color: c.outline),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(explanation,
-              style: AppText.caption.copyWith(
-                  color: c.textSecondary, height: 1.6)),
+          if (breakdown.isNotEmpty)
+            StatementBreakdown(breakdown: breakdown, stem: stem)
+          else
+            Text(explanation,
+                style: AppText.caption.copyWith(
+                    color: c.textSecondary, height: 1.6)),
         ],
       ),
     );

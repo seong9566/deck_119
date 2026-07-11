@@ -17,23 +17,28 @@ const SessionStateSchema = CollectionSchema(
   name: r'SessionState',
   id: 2907891941950391379,
   properties: {
-    r'key': PropertySchema(
+    r'answers': PropertySchema(
       id: 0,
+      name: r'answers',
+      type: IsarType.longList,
+    ),
+    r'key': PropertySchema(
+      id: 1,
       name: r'key',
       type: IsarType.string,
     ),
     r'lastIndex': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'lastIndex',
       type: IsarType.long,
     ),
     r'subjectId': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'subjectId',
       type: IsarType.string,
     ),
     r'updatedAtMs': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'updatedAtMs',
       type: IsarType.long,
     )
@@ -72,6 +77,7 @@ int _sessionStateEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.answers.length * 8;
   bytesCount += 3 + object.key.length * 3;
   bytesCount += 3 + object.subjectId.length * 3;
   return bytesCount;
@@ -83,10 +89,11 @@ void _sessionStateSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.key);
-  writer.writeLong(offsets[1], object.lastIndex);
-  writer.writeString(offsets[2], object.subjectId);
-  writer.writeLong(offsets[3], object.updatedAtMs);
+  writer.writeLongList(offsets[0], object.answers);
+  writer.writeString(offsets[1], object.key);
+  writer.writeLong(offsets[2], object.lastIndex);
+  writer.writeString(offsets[3], object.subjectId);
+  writer.writeLong(offsets[4], object.updatedAtMs);
 }
 
 SessionState _sessionStateDeserialize(
@@ -96,11 +103,12 @@ SessionState _sessionStateDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = SessionState();
+  object.answers = reader.readLongList(offsets[0]) ?? [];
   object.id = id;
-  object.key = reader.readString(offsets[0]);
-  object.lastIndex = reader.readLong(offsets[1]);
-  object.subjectId = reader.readString(offsets[2]);
-  object.updatedAtMs = reader.readLong(offsets[3]);
+  object.key = reader.readString(offsets[1]);
+  object.lastIndex = reader.readLong(offsets[2]);
+  object.subjectId = reader.readString(offsets[3]);
+  object.updatedAtMs = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -112,12 +120,14 @@ P _sessionStateDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
       return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -318,6 +328,151 @@ extension SessionStateQueryWhere
 
 extension SessionStateQueryFilter
     on QueryBuilder<SessionState, SessionState, QFilterCondition> {
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'answers',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'answers',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'answers',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'answers',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SessionState, SessionState, QAfterFilterCondition>
+      answersLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'answers',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<SessionState, SessionState, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -876,6 +1031,12 @@ extension SessionStateQuerySortThenBy
 
 extension SessionStateQueryWhereDistinct
     on QueryBuilder<SessionState, SessionState, QDistinct> {
+  QueryBuilder<SessionState, SessionState, QDistinct> distinctByAnswers() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'answers');
+    });
+  }
+
   QueryBuilder<SessionState, SessionState, QDistinct> distinctByKey(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -908,6 +1069,12 @@ extension SessionStateQueryProperty
   QueryBuilder<SessionState, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<SessionState, List<int>, QQueryOperations> answersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'answers');
     });
   }
 

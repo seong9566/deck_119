@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 
+import '../../../domain/entities/question.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'statement_breakdown.dart';
 
 /// 해설 카드(DESIGN_HANDOFF §2.2). 정오답 배너(위)에 해설 카드(아래)가 붙은 형태.
 /// 배너: tint 배경 + 아이콘 + 제목 / 카드: surface + "해설" 라벨 + 본문.
+/// 개수형([breakdown] 있음)이면 본문을 보기별 O/X 브레이크다운으로 렌더한다.
 class ExplanationCard extends StatelessWidget {
   final bool correct;
   final String explanation;
+
+  /// 개수형 보기별 판정(비어 있으면 단일 텍스트 해설).
+  final List<StatementVerdict> breakdown;
+
+  /// breakdown 렌더 시 보기 지문 출처(문항 stem).
+  final String stem;
 
   const ExplanationCard({
     super.key,
     required this.correct,
     required this.explanation,
+    this.breakdown = const [],
+    this.stem = '',
   });
 
   @override
@@ -70,8 +81,11 @@ class ExplanationCard extends StatelessWidget {
             children: [
               Text('해설', style: AppText.label.copyWith(color: c.textTertiary)),
               const SizedBox(height: AppSpacing.sm),
-              Text(explanation,
-                  style: AppText.body.copyWith(color: c.textPrimary)),
+              if (breakdown.isNotEmpty)
+                StatementBreakdown(breakdown: breakdown, stem: stem)
+              else
+                Text(explanation,
+                    style: AppText.body.copyWith(color: c.textPrimary)),
             ],
           ),
         ),

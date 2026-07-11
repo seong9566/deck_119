@@ -6,12 +6,22 @@ class SessionRepositoryImpl implements SessionRepository {
   SessionRepositoryImpl(this._local);
 
   @override
-  Future<int?> getLastIndex(String subjectId) => _local.lastIndex(subjectId);
+  Future<({int lastIndex, List<int?> answers})?> load(String subjectId) async {
+    final snap = await _local.load(subjectId);
+    if (snap == null) return null;
+    // 저장은 -1 sentinel, 도메인은 null 로 표현.
+    return (
+      lastIndex: snap.lastIndex,
+      answers: [for (final a in snap.answers) a < 0 ? null : a],
+    );
+  }
 
   @override
-  Future<void> save(String subjectId, int lastIndex) => _local.save(
+  Future<void> save(String subjectId, int lastIndex, List<int?> answers) =>
+      _local.save(
         subjectId,
         lastIndex,
+        [for (final a in answers) a ?? -1],
         nowMs: DateTime.now().millisecondsSinceEpoch,
       );
 

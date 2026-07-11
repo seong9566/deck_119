@@ -261,7 +261,11 @@ class _QuestionView extends ConsumerWidget {
                   if (state.revealed) ...[
                     const SizedBox(height: AppSpacing.xl),
                     ExplanationCard(
-                        correct: correct, explanation: q.explanation),
+                      correct: correct,
+                      explanation: q.explanation,
+                      breakdown: q.breakdown,
+                      stem: q.stem,
+                    ),
                   ],
                 ],
               ),
@@ -413,6 +417,7 @@ class _ResultView extends StatelessWidget {
                         correctAnswer: state
                             .questions[i].choices[state.questions[i].answerIndex],
                         explanation: state.questions[i].explanation,
+                        breakdown: state.questions[i].breakdown,
                       ),
                   ],
                 ],

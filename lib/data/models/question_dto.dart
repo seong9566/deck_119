@@ -15,6 +15,18 @@ class QuestionDto {
       explanation: json['explanation'] as String,
       difficulty: (json['difficulty'] as String?) ?? 'v3',
       tags: (json['tags'] as List?)?.cast<String>() ?? const <String>[],
+      breakdown: (json['breakdown'] as List?)
+              ?.map((e) => _verdictFromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <StatementVerdict>[],
+    );
+  }
+
+  static StatementVerdict _verdictFromJson(Map<String, dynamic> json) {
+    return StatementVerdict(
+      label: json['label'] as String,
+      correct: json['correct'] as bool,
+      note: (json['note'] as String?) ?? '',
     );
   }
 }

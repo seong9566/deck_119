@@ -38,31 +38,35 @@ void main() {
     if (dir.existsSync()) dir.deleteSync(recursive: true);
   });
 
-  test('세션 저장 후 복원된다', () async {
+  test('세션 저장 후 위치·답이 복원된다', () async {
     final repo = SessionRepositoryImpl(IsarSessionDataSource(isar));
-    expect(await repo.getLastIndex('s1'), isNull);
+    expect(await repo.load('s1'), isNull);
 
-    await repo.save('s1', 3);
-    expect(await repo.getLastIndex('s1'), 3);
+    await repo.save('s1', 3, [0, 1, 2, null]);
+    var snap = await repo.load('s1');
+    expect(snap?.lastIndex, 3);
+    expect(snap?.answers, [0, 1, 2, null]); // -1 sentinel ↔ null 왕복
 
     // upsert: 같은 과목은 덮어쓴다(중복 생성 금지).
-    await repo.save('s1', 7);
-    expect(await repo.getLastIndex('s1'), 7);
+    await repo.save('s1', 7, [0, 1, 2, 3, null]);
+    snap = await repo.load('s1');
+    expect(snap?.lastIndex, 7);
+    expect(snap?.answers, [0, 1, 2, 3, null]);
     expect(await isar.sessionStates.count(), 1);
   });
 
   test('finish 시 세션 삭제', () async {
     final repo = SessionRepositoryImpl(IsarSessionDataSource(isar));
-    await repo.save('s1', 5);
+    await repo.save('s1', 5, [0]);
     await repo.clear('s1');
-    expect(await repo.getLastIndex('s1'), isNull);
+    expect(await repo.load('s1'), isNull);
   });
 
   test('과목별로 세션이 분리된다', () async {
     final repo = SessionRepositoryImpl(IsarSessionDataSource(isar));
-    await repo.save('s1', 2);
-    await repo.save('s2', 9);
-    expect(await repo.getLastIndex('s1'), 2);
-    expect(await repo.getLastIndex('s2'), 9);
+    await repo.save('s1', 2, [1, null]);
+    await repo.save('s2', 9, [2, null]);
+    expect((await repo.load('s1'))?.lastIndex, 2);
+    expect((await repo.load('s2'))?.lastIndex, 9);
   });
 }

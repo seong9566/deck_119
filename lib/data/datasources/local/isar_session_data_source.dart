@@ -9,18 +9,25 @@ class IsarSessionDataSource {
 
   String _key(String subjectId) => '$subjectId:normal';
 
-  Future<int?> lastIndex(String subjectId) async {
+  Future<({int lastIndex, List<int> answers})?> load(String subjectId) async {
     final row = await _isar.sessionStates.getByKey(_key(subjectId));
-    return row?.lastIndex;
+    if (row == null) return null;
+    return (lastIndex: row.lastIndex, answers: row.answers);
   }
 
-  Future<void> save(String subjectId, int lastIndex, {required int nowMs}) async {
+  Future<void> save(
+    String subjectId,
+    int lastIndex,
+    List<int> answers, {
+    required int nowMs,
+  }) async {
     await _isar.writeTxn(() async {
       await _isar.sessionStates.putByKey(
         SessionState()
           ..key = _key(subjectId)
           ..subjectId = subjectId
           ..lastIndex = lastIndex
+          ..answers = answers
           ..updatedAtMs = nowMs,
       );
     });

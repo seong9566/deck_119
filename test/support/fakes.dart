@@ -41,17 +41,18 @@ class FakeProgressRepository implements ProgressRepository {
 
 /// 테스트용 인메모리 이어풀기 저장소.
 class FakeSessionRepository implements SessionRepository {
-  final Map<String, int> _last = {};
+  final Map<String, ({int lastIndex, List<int?> answers})> _sessions = {};
 
   @override
-  Future<int?> getLastIndex(String subjectId) async => _last[subjectId];
+  Future<({int lastIndex, List<int?> answers})?> load(String subjectId) async =>
+      _sessions[subjectId];
 
   @override
-  Future<void> save(String subjectId, int lastIndex) async =>
-      _last[subjectId] = lastIndex;
+  Future<void> save(String subjectId, int lastIndex, List<int?> answers) async =>
+      _sessions[subjectId] = (lastIndex: lastIndex, answers: [...answers]);
 
   @override
-  Future<void> clear(String subjectId) async => _last.remove(subjectId);
+  Future<void> clear(String subjectId) async => _sessions.remove(subjectId);
 }
 
 /// 테스트용 인메모리 설정 저장소.

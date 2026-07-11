@@ -19,15 +19,19 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
         await ref.watch(getQuestionSetProvider)(arg.subjectId, arg.mode);
 
     var startIndex = 0;
+    var answers = List<int?>.filled(questions.length, null);
     if (arg.mode == QuizMode.normal && arg.resume) {
       final info = await ref.watch(getResumeInfoProvider)(arg.subjectId);
       if (info != null && info.lastIndex < questions.length) {
         startIndex = info.lastIndex;
+        // 이전 세션의 선택을 복원(길이 방어) → 되돌아가면 답·해설이 되살아난다.
+        for (var i = 0; i < questions.length && i < info.answers.length; i++) {
+          answers[i] = info.answers[i];
+        }
       }
     }
-    // 이어풀기 시작 위치를 뒤로 이동 하한으로 둔다(그 앞은 이번 세션 미응답).
     return QuizState.initial(questions, arg.mode)
-        .copyWith(index: startIndex, minIndex: startIndex);
+        .copyWith(index: startIndex, answers: answers);
   }
 
   /// 선택지 응답.
@@ -47,6 +51,8 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     if (s.revealed) return; // 이미 채점된 문항은 재응답 불가
     await ref.read(submitAnswerProvider)(s.current, choiceIndex);
     state = AsyncData(s.copyWith(answers: answers));
+    // 선택 즉시 세션에 반영 → 재진입 시 이 답·해설이 복원된다.
+    _saveSessionIfNormal(s.index, answers);
   }
 
   /// 다음 문항으로.
@@ -69,13 +75,13 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     } else {
       final nextIndex = s.index + 1;
       state = AsyncData(s.copyWith(index: nextIndex));
-      // 아직 안 푼 새 문항으로 나아갈 때만 이어풀기 위치 저장.
+      // 아직 안 푼 새 문항으로 나아갈 때만 이어풀기 위치를 전진 저장.
       // 뒤로 갔다 되돌아오는 중이면 최전방 위치를 유지한다.
-      if (s.answers[nextIndex] == null) _saveSessionIfNormal(nextIndex);
+      if (s.answers[nextIndex] == null) _saveSessionIfNormal(nextIndex, s.answers);
     }
   }
 
-  /// 이전 문항으로. 세션 시작 위치(minIndex)보다 앞으로는 못 간다.
+  /// 이전 문항으로(첫 문항이 하한). 복원된 답·해설을 그대로 다시 본다.
   /// 이어풀기 위치는 최전방을 유지하므로 여기서 저장하지 않는다.
   void prev() {
     final s = state.value;
@@ -95,9 +101,9 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     state = AsyncData(s.copyWith(finished: true));
   }
 
-  void _saveSessionIfNormal(int index) {
+  void _saveSessionIfNormal(int index, List<int?> answers) {
     if (arg.mode == QuizMode.normal) {
-      ref.read(saveSessionPositionProvider)(arg.subjectId, index);
+      ref.read(saveSessionPositionProvider)(arg.subjectId, index, answers);
     }
   }
 

@@ -10,10 +10,14 @@ class GetResumeInfo {
   GetResumeInfo(this._questions, this._session);
 
   Future<ResumeInfo?> call(String subjectId) async {
-    final idx = await _session.getLastIndex(subjectId);
-    if (idx == null || idx <= 0) return null;
+    final snap = await _session.load(subjectId);
+    if (snap == null || snap.lastIndex <= 0) return null;
     final total = (await _questions.getQuestions(subjectId)).length;
-    if (idx >= total) return null;
-    return ResumeInfo(lastIndex: idx, total: total);
+    if (snap.lastIndex >= total) return null;
+    return ResumeInfo(
+      lastIndex: snap.lastIndex,
+      total: total,
+      answers: snap.answers,
+    );
   }
 }
