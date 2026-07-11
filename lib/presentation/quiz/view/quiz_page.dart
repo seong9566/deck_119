@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../app_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_spacing.dart';
 import '../../shared/theme/app_typography.dart';
@@ -30,31 +31,16 @@ class QuizPage extends ConsumerWidget {
     final async = ref.watch(quizViewModelProvider(args));
 
     return async.when(
-      loading: () => AppScaffold(
-        title: modeTitle(mode),
-        body: const Center(child: CircularProgressIndicator()),
-      ),
-      error: (e, _) => AppScaffold(
-        title: modeTitle(mode),
-        body: EmptyState(
-          icon: Icons.error_outline,
-          iconColor: context.colors.brand,
-          iconBg: context.colors.brandTint,
-          title: '문제를 불러오지 못했어요',
-          description: '문항 데이터를 여는 중 문제가 생겼어요.\n다시 시도해 주세요.',
+      loading: () => const _QuizScaffold(child: _LoadingView()),
+      error: (e, _) => _QuizScaffold(
+        child: _ErrorView(
+          onRetry: () => ref.invalidate(quizViewModelProvider(args)),
         ),
       ),
       data: (state) {
         if (state.isEmpty) {
-          return AppScaffold(
-            title: modeTitle(mode),
-            body: EmptyState(
-              icon: Icons.check,
-              iconColor: context.colors.correct,
-              iconBg: context.colors.onCorrect,
-              title: '풀 오답이 없어요',
-              description: '먼저 문제를 풀어 오답을 쌓아보세요.',
-            ),
+          return _QuizScaffold(
+            child: _EmptyReviewView(onHome: () => _closeToHome(context)),
           );
         }
         if (state.finished) {
@@ -65,6 +51,166 @@ class QuizPage extends ConsumerWidget {
         }
         return _QuestionView(args: args, state: state);
       },
+    );
+  }
+}
+
+/// 풀스크린 닫기(✕/홈으로) — push 진입이면 pop, 아니면 홈 탭으로.
+void _closeToHome(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(Routes.home);
+  }
+}
+
+/// 풀이·시험·로딩·에러 공용 풀스크린 셸(탭바 없음, 배경 background).
+class _QuizScaffold extends StatelessWidget {
+  final Widget child;
+  const _QuizScaffold({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      body: SafeArea(child: child),
+    );
+  }
+}
+
+/// 로딩 — 스켈레톤 + 하단 스피너(DESIGN_HANDOFF §2.2).
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    Widget bar(double h, {double? w, double top = 0}) => Container(
+          margin: EdgeInsets.only(top: top),
+          width: w,
+          height: h,
+          decoration: BoxDecoration(
+            color: c.selTint,
+            borderRadius: BorderRadius.circular(AppSpacing.sm),
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+                value: .28,
+                minHeight: 6,
+                color: c.brand,
+                backgroundColor: c.selTint),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          bar(22, w: 88),
+          bar(22, top: AppSpacing.lg),
+          bar(22, w: 220, top: AppSpacing.sm),
+          Container(
+            margin: const EdgeInsets.only(top: AppSpacing.xl),
+            height: 120,
+            decoration: BoxDecoration(
+              color: c.surfaceVariant,
+              border: Border.all(color: c.outline),
+              borderRadius: BorderRadius.circular(AppRadius.tile),
+            ),
+          ),
+          bar(56, top: AppSpacing.xl),
+          bar(56, top: AppSpacing.sm),
+          const Spacer(),
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 3, color: c.brand),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text('문항을 불러오는 중…',
+                    style: AppText.caption.copyWith(color: c.textTertiary)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 에러 — brandTint "!" + 오프라인 번들 카피(§3-2) + 홈으로/다시 시도.
+class _ErrorView extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _ErrorView({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Column(
+      children: [
+        Expanded(
+          child: EmptyState(
+            icon: Icons.priority_high,
+            iconColor: c.brand,
+            iconBg: c.brandTint,
+            title: '문제를 불러오지 못했어요',
+            description: '문항 데이터를 여는 중 문제가 생겼어요.\n다시 시도해 주세요.',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl),
+          child: Row(
+            children: [
+              Expanded(
+                child: SecondaryButton(
+                    label: '홈으로', onPressed: () => _closeToHome(context)),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: PrimaryButton(label: '다시 시도', onPressed: onRetry),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 오답 재풀이 빈 상태(DESIGN_HANDOFF §2.2).
+class _EmptyReviewView extends StatelessWidget {
+  final VoidCallback onHome;
+  const _EmptyReviewView({required this.onHome});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Column(
+      children: [
+        Expanded(
+          child: EmptyState(
+            icon: Icons.check,
+            iconColor: c.correct,
+            iconBg: c.onCorrect,
+            title: '풀 오답이 없어요',
+            description: '틀린 문항을 모두 정복했어요.\n새 문제로 실력을 이어가 볼까요?',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl),
+          child: PrimaryButton(label: '홈으로', onPressed: onHome),
+        ),
+      ],
     );
   }
 }
@@ -86,64 +232,103 @@ class _QuestionView extends ConsumerWidget {
     final vm = ref.read(quizViewModelProvider(args).notifier);
     final q = state.current;
     final correct = state.selected == q.answerIndex;
+    final c = context.colors;
 
-    return AppScaffold(
-      title: modeTitle(args.mode),
-      padBody: false,
-      bottomBar: _bottomBar(vm),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
-            child: ProgressHeader(
-              position: state.position,
-              total: state.total,
-              value: state.progress,
-            ),
-          ),
-          Expanded(
-            child: ListView(
+    return Scaffold(
+      backgroundColor: c.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
-              children: [
-                QuestionCard(type: q.type, stem: q.stem),
-                const SizedBox(height: AppSpacing.lg),
-                for (var i = 0; i < q.choices.length; i++)
-                  ChoiceTile(
-                    label: q.choices[i],
-                    status: _statusFor(i, q),
-                    onTap: (state.isExam || !state.revealed)
-                        ? () => vm.select(i)
-                        : null,
-                  ),
-                if (state.revealed) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  ExplanationCard(
-                      correct: correct, explanation: q.explanation),
-                ],
-              ],
+                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+              child: ProgressHeader(
+                position: state.position,
+                total: state.total,
+                value: state.progress,
+                modeLabel: modeTitle(args.mode),
+                onClose: () => _closeToHome(context),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
+                children: [
+                  QuestionCard(type: q.type, stem: q.stem),
+                  const SizedBox(height: AppSpacing.xl),
+                  _choices(q, vm),
+                  if (state.revealed) ...[
+                    const SizedBox(height: AppSpacing.xl),
+                    ExplanationCard(
+                        correct: correct, explanation: q.explanation),
+                  ],
+                ],
+              ),
+            ),
+            _bottomBar(context, vm),
+          ],
+        ),
       ),
     );
   }
 
-  /// 하단 액션. exam은 항상 다음/제출, normal 계열은 채점 후에만 노출.
-  Widget? _bottomBar(QuizViewModel vm) {
-    if (state.isExam) {
-      return PrimaryButton(
-        label: state.isLast ? '제출' : '다음',
-        onPressed: state.isLast ? vm.submit : vm.next,
+  /// 선택지 — MC는 세로 타일, OX는 대형 2버튼 행.
+  Widget _choices(Question q, QuizViewModel vm) {
+    final tappable = state.isExam || !state.revealed;
+    if (q.type == QuestionType.ox) {
+      return Row(
+        children: [
+          for (var i = 0; i < q.choices.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppSpacing.md),
+            ChoiceTile(
+              label: q.choices[i],
+              status: _statusFor(i, q),
+              variant: ChoiceVariant.ox,
+              onTap: tappable ? () => vm.select(i) : null,
+            ),
+          ],
+        ],
       );
     }
-    return state.revealed
-        ? PrimaryButton(
-            label: state.isLast ? '결과 보기' : '다음',
-            onPressed: vm.next,
-          )
-        : null;
+    return Column(
+      children: [
+        for (var i = 0; i < q.choices.length; i++)
+          ChoiceTile(
+            label: q.choices[i],
+            status: _statusFor(i, q),
+            onTap: tappable ? () => vm.select(i) : null,
+          ),
+      ],
+    );
+  }
+
+  /// 하단 고정 버튼(항상 표시). normal은 채점 전 비활성(§목업 nextDisabled).
+  Widget _bottomBar(BuildContext context, QuizViewModel vm) {
+    final c = context.colors;
+    final String label;
+    final VoidCallback? onPressed;
+    if (state.isExam) {
+      label = state.isLast ? '제출하고 채점' : '다음';
+      onPressed = state.isLast ? vm.submit : vm.next;
+    } else {
+      label = state.isLast ? '결과 보기' : '다음';
+      onPressed = state.revealed ? vm.next : null; // 채점 전 비활성
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border(top: BorderSide(color: c.outline)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
+          child: PrimaryButton(label: label, onPressed: onPressed),
+        ),
+      ),
+    );
   }
 
   ChoiceStatus _statusFor(int i, Question q) {

@@ -57,8 +57,8 @@ void main() {
     // Q3 정답 선택 → 제출
     await tester.tap(find.text('A3 옳음'));
     await tester.pumpAndSettle();
-    expect(find.text('제출'), findsOneWidget);
-    await tester.tap(find.text('제출'));
+    expect(find.text('제출하고 채점'), findsOneWidget);
+    await tester.tap(find.text('제출하고 채점'));
     await tester.pumpAndSettle();
 
     // 결과: 2/3, 오답 리뷰에 Q2 노출(내 답/정답 포함)
@@ -83,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('다음'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('제출'));
+    await tester.tap(find.text('제출하고 채점'));
     await tester.pumpAndSettle();
 
     expect(find.text('1 / 3'), findsOneWidget);
