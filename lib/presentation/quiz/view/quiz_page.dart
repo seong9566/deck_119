@@ -348,65 +348,157 @@ class _ResultView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final wrong = state.wrongIndexes;
-    return AppScaffold(
-      title: '결과',
-      padBody: false,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xl),
-        children: [
-          ScoreView(correct: state.correctCount, total: state.total),
-          const SizedBox(height: AppSpacing.xl),
-          _ReviewLabel(wrongCount: wrong.length),
-          const SizedBox(height: AppSpacing.md),
-          if (wrong.isEmpty)
-            EmptyState(
-              icon: Icons.check,
-              iconColor: context.colors.correct,
-              iconBg: context.colors.onCorrect,
-              title: '전부 맞혔어요, 완벽합니다',
-              description: '복습할 오답이 없습니다.\n다음 세트로 넘어가세요.',
-            )
-          else
-            for (final i in wrong)
-              ReviewCard(
-                order: i + 1,
-                stem: state.questions[i].stem,
-                myAnswer: state.answers[i] == null
-                    ? '미응답'
-                    : state.questions[i].choices[state.answers[i]!],
-                correctAnswer: state
-                    .questions[i].choices[state.questions[i].answerIndex],
-                explanation: state.questions[i].explanation,
+    return Scaffold(
+      backgroundColor: c.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 상단 바: 채점 결과 + 닫기
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
+              child: Row(
+                children: [
+                  Text('채점 결과',
+                      style: AppText.label
+                          .copyWith(color: c.textSecondary, letterSpacing: 0)),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => _closeToHome(context),
+                    icon: const Icon(Icons.close),
+                    color: c.textTertiary,
+                    iconSize: 20,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: '닫기',
+                  ),
+                ],
               ),
-        ],
-      ),
-      bottomBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SecondaryButton(label: '다시 풀기', onPressed: onRetry),
-          const SizedBox(height: AppSpacing.sm),
-          SecondaryButton(
-            label: '홈으로',
-            onPressed: () => context.pop(),
-          ),
-        ],
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xl),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                    child:
+                        ScoreView(correct: state.correctCount, total: state.total),
+                  ),
+                  if (wrong.isEmpty)
+                    const _PerfectCard()
+                  else ...[
+                    _ReviewHeader(count: wrong.length),
+                    const SizedBox(height: AppSpacing.md),
+                    for (final i in wrong)
+                      ReviewCard(
+                        order: i + 1,
+                        stem: state.questions[i].stem,
+                        myAnswer: state.answers[i] == null
+                            ? '미응답'
+                            : state.questions[i].choices[state.answers[i]!],
+                        correctAnswer: state
+                            .questions[i].choices[state.questions[i].answerIndex],
+                        explanation: state.questions[i].explanation,
+                      ),
+                  ],
+                ],
+              ),
+            ),
+            // 하단 고정: 홈으로 / 다시 풀기
+            Container(
+              decoration: BoxDecoration(
+                color: c.surface,
+                border: Border(top: BorderSide(color: c.outline)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.xl,
+                      AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SecondaryButton(
+                            label: '홈으로',
+                            onPressed: () => _closeToHome(context)),
+                      ),
+                      const SizedBox(width: AppSpacing.sm + 2),
+                      Expanded(
+                        flex: 3,
+                        child:
+                            PrimaryButton(label: '다시 풀기', onPressed: onRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _ReviewLabel extends StatelessWidget {
-  final int wrongCount;
-  const _ReviewLabel({required this.wrongCount});
+/// 결과 오답 리뷰 섹션 헤더: "오답 리뷰" + "N문항" pill.
+class _ReviewHeader extends StatelessWidget {
+  final int count;
+  const _ReviewHeader({required this.count});
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Text(
-      wrongCount == 0 ? '오답 리뷰' : '오답 리뷰 ($wrongCount)',
-      style: AppText.label.copyWith(color: c.textSecondary),
+    return Row(
+      children: [
+        Text('오답 리뷰',
+            style: AppText.choice
+                .copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md - 2, vertical: 3),
+          decoration: BoxDecoration(
+              color: c.onWrong,
+              borderRadius: BorderRadius.circular(AppRadius.pill)),
+          child: Text('$count문항',
+              style: AppText.caption
+                  .copyWith(color: c.wrongInk, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
+}
+
+/// 만점 카드(correctTint) — 오답 대신 표시.
+class _PerfectCard extends StatelessWidget {
+  const _PerfectCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: c.onCorrect,
+        border: Border.all(color: c.correct),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Column(
+        children: [
+          Text('전부 맞혔어요, 완벽합니다',
+              textAlign: TextAlign.center,
+              style: AppText.choice.copyWith(
+                  color: c.correctInk, fontWeight: FontWeight.w700)),
+          const SizedBox(height: AppSpacing.xs + 2),
+          Text('복습할 오답이 없습니다. 다음 세트로 넘어가세요.',
+              textAlign: TextAlign.center,
+              style: AppText.caption
+                  .copyWith(color: c.textSecondary, height: 1.6)),
+        ],
+      ),
     );
   }
 }

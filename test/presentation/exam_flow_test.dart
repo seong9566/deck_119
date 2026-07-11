@@ -63,7 +63,8 @@ void main() {
 
     // 결과: 2/3, 오답 리뷰에 Q2 노출(내 답/정답 포함)
     expect(find.text('2 / 3'), findsOneWidget);
-    expect(find.text('오답 리뷰 (1)'), findsOneWidget);
+    expect(find.text('오답 리뷰'), findsOneWidget);
+    expect(find.text('1문항'), findsOneWidget);
     expect(find.text('Q2 지문'), findsOneWidget);
     // 오답 리뷰 칩: "✕ 내 답  <내 답>" / "✓ 정답  <정답>"
     expect(find.text('✕ 내 답  A2 틀림'), findsOneWidget); // 내가 고른 오답
