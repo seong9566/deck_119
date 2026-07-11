@@ -49,6 +49,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('풀 과목을 선택하세요'), findsOneWidget);
+    expect(find.text('테스트과목'), findsOneWidget);
+    // 문항 수 실측 노출(fake 2문항).
+    expect(find.text('총 2문항'), findsOneWidget);
   });
 
   testWidgets('홈 → 전체 풀이 → /quiz', (tester) async {
