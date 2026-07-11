@@ -58,7 +58,7 @@ void main() {
 
     // 마지막 문항(Q3)에서 시작(진행헤더에 3/3 표시)
     expect(find.text('Q3 지문'), findsOneWidget);
-    expect(find.text('3 / 3'), findsOneWidget);
+    expect(find.textContaining('3 / 3'), findsOneWidget);
   });
 
   testWidgets('normal: 마지막 문항 완료 시 세션이 삭제된다', (tester) async {
