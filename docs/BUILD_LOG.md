@@ -80,3 +80,16 @@
 
 ### 결론
 코드 품질 게이트(analyze 0 · 테스트 25 통과)와 MVP Must 기능은 완주. Android 릴리스 빌드는 의존성 버전 정합(승인 필요) 후 가능.
+
+---
+
+# 페이즈 2 — 디자인 반영 (T10~T16)
+
+## T10 — 토큰 목업값 반영 + Pretendard 번들 ✅
+
+- `AppColors` 라이트/다크를 DESIGN_HANDOFF §1.1/§1.2 확정값으로 교체하고 신규 토큰(brandInk·brandTint·outlineStrong·textTertiary·correctInk·wrongInk·sel·selTint·shadow) 추가. 기존 위젯이 쓰던 필드명(surfaceVariant=surfaceAlt, onCorrect=correctTint, onWrong=wrongTint)은 하위호환 유지 → T10에선 위젯 코드 변경 0.
+- `AppText`를 Pretendard 스케일(§1.3)로 교체(score 56/w800 등) + scoreUnit·logo·subjectName·oxGlyph·tab 역할 신설. `ThemeData.fontFamily='Pretendard'` 전역 상속.
+- spacing xl 20·xxl 24·huge 32(화면 좌우 20), radius tile 14·card 16·ox 20·iconBadge 28·badge 8(§1.4).
+- pubspec에 Pretendard 4 weight(400/500/600/700) 등록(승인 예외). otf 파일은 assets/fonts/에 기존 존재. 목업은 900까지 쓰나 번들 파일은 4개뿐 → 800/900 요청은 700로 근사(Flutter 최근접 매칭).
+- 검증: `flutter pub get` OK · `flutter analyze` 0 · `flutter test` 전부 통과(색값 하드 검증 테스트 없어 기대값 갱신 불필요).
+- **인프라 메모(주의)**: PM `task.sh`가 ID만으로 매칭 → toss-자동매매 프로젝트에도 T10이 있어 `wip T10 --force`가 toss T10(done)을 건드림. 즉시 toss를 done으로 원복하고, 소방 T10은 태스크 파일을 직접 편집해 상태 전환. post-commit 훅의 `done T10`도 동일 모호성으로 소방을 자동 done 못 함 → 수동 done 처리. 이후 T11~T16도 태스크 파일 직접 편집으로 상태 관리 예정.
