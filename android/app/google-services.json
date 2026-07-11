@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "771540934251",
+    "project_id": "deck-119",
+    "storage_bucket": "deck-119.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:771540934251:android:53eca952be5c43d41d1b2e",
+        "android_client_info": {
+          "package_name": "com.seong.deck119"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeF_sQSvPc0cWUoISF7iF-NO3Ibc0xFPg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
