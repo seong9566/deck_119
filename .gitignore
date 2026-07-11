@@ -80,3 +80,6 @@ app.*.map.json
 
 # Gradle 빌드 산출물
 /android/build/
+
+# 기출 원문(다운로드 자료, PRIVATE base — 저작권상 커밋 금지)
+/docs/시험문제/
