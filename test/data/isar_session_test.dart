@@ -69,4 +69,16 @@ void main() {
     expect((await repo.load('s1'))?.lastIndex, 2);
     expect((await repo.load('s2'))?.lastIndex, 9);
   });
+
+  test('recentSessions: 갱신 최신순으로 반환한다', () async {
+    final ds = IsarSessionDataSource(isar);
+    await ds.save('s1', 1, [0], nowMs: 100);
+    await ds.save('s2', 2, [0], nowMs: 300); // 가장 최신
+    await ds.save('s3', 3, [0], nowMs: 200);
+
+    final repo = SessionRepositoryImpl(ds);
+    final recent = await repo.recentSessions(limit: 2);
+    expect(recent.map((r) => r.collectionId).toList(), ['s2', 's3']);
+    expect(recent.first.lastIndex, 2);
+  });
 }

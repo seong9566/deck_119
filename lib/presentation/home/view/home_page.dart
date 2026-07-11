@@ -100,11 +100,11 @@ class HomePage extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _QuickTile(
-                        icon: Icons.shuffle,
-                        title: '랜덤 풀이',
-                        subtitle: '무작위 순서로',
+                        icon: Icons.bolt,
+                        title: '빠른 10문제',
+                        subtitle: '무작위 10문항',
                         onTap: () => _openMode(
-                            context, ref, subjectId, QuizMode.random),
+                            context, ref, subjectId, QuizMode.quick),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),

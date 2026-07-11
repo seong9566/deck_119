@@ -77,4 +77,37 @@ void main() {
     await repo.recordAttempt('q9', correct: true);
     expect(await repo.getWrongIds(), isEmpty);
   });
+
+  test('stats: 정답률·서로다른 문항수를 집계한다', () async {
+    final ds = IsarProgressDataSource(isar);
+    final today = DateTime.now().millisecondsSinceEpoch;
+    await ds.record('q1', correct: true, nowMs: today);
+    await ds.record('q2', correct: false, nowMs: today);
+    await ds.record('q1', correct: true, nowMs: today); // 같은 문항 재시도
+
+    final s = await ds.stats();
+    expect(s.attempts, 3);
+    expect(s.correct, 2);
+    expect(s.distinct, 2); // q1, q2
+    expect(s.streak, 1); // 오늘 학습 → 연속 1일
+  });
+
+  test('stats: 오늘+어제 학습이면 연속 2일', () async {
+    final ds = IsarProgressDataSource(isar);
+    final now = DateTime.now();
+    final today = now.millisecondsSinceEpoch;
+    final yesterday =
+        now.subtract(const Duration(days: 1)).millisecondsSinceEpoch;
+    await ds.record('q1', correct: true, nowMs: yesterday);
+    await ds.record('q2', correct: true, nowMs: today);
+
+    final s = await ds.stats();
+    expect(s.streak, 2);
+  });
+
+  test('stats: 시도 없으면 모두 0', () async {
+    final s = await IsarProgressDataSource(isar).stats();
+    expect(s.attempts, 0);
+    expect(s.streak, 0);
+  });
 }

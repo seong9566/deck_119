@@ -218,6 +218,7 @@ class _EmptyReviewView extends StatelessWidget {
 String modeTitle(QuizMode mode) => switch (mode) {
       QuizMode.normal => '전체 풀이',
       QuizMode.random => '랜덤',
+      QuizMode.quick => '빠른 10문제',
       QuizMode.review => '오답 재풀이',
       QuizMode.exam => '시험 모드',
     };

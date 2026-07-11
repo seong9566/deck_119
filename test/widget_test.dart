@@ -37,7 +37,7 @@ void main() {
     // 홈 = 학습 대시보드.
     expect(find.text('안녕하세요 👋'), findsOneWidget);
     expect(find.text('오늘의 학습'), findsOneWidget);
-    expect(find.text('랜덤 풀이'), findsOneWidget);
+    expect(find.text('빠른 10문제'), findsOneWidget);
     expect(find.text('오답 재풀이'), findsOneWidget);
     expect(find.text('내 진척'), findsOneWidget);
     expect(find.text('진행률'), findsOneWidget);

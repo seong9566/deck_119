@@ -18,6 +18,8 @@ class GetQuestionSet {
         return all;
       case QuizMode.random:
         return [...all]..shuffle();
+      case QuizMode.quick:
+        return ([...all]..shuffle()).take(10).toList();
       case QuizMode.review:
         final wrong = await _progress.getWrongIds();
         return all.where((q) => wrong.contains(q.id)).toList();
