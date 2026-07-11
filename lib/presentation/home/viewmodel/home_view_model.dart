@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../di.dart';
+import '../../../domain/entities/question.dart';
 import '../../../domain/entities/resume_info.dart';
 import '../../../domain/entities/subject.dart';
 
@@ -19,4 +20,32 @@ class HomeViewModel extends AsyncNotifier<List<Subject>> {
 final resumeInfoProvider =
     FutureProvider.autoDispose.family<ResumeInfo?, String>((ref, subjectId) {
   return ref.watch(getResumeInfoProvider)(subjectId);
+});
+
+/// 과목 문항 통계(실측 — §3-1 하드코딩 금지). 홈/과목 화면 메타·모드 설명에 사용.
+class SubjectStats {
+  final int total;
+  final int mcq;
+  final int ox;
+  const SubjectStats({required this.total, required this.mcq, required this.ox});
+
+  /// "객관식 N · OX M · 총 K문항"(OX 0이면 생략) — 실제 로드된 수 기반.
+  String get meta {
+    final parts = <String>[
+      if (mcq > 0) '객관식 $mcq',
+      if (ox > 0) 'OX $ox',
+    ];
+    final head = parts.isEmpty ? '' : '${parts.join(' · ')} · ';
+    return '$head총 $total문항';
+  }
+}
+
+final subjectStatsProvider =
+    FutureProvider.autoDispose.family<SubjectStats, String>((ref, subjectId) async {
+  final qs = await ref.watch(questionRepositoryProvider).getQuestions(subjectId);
+  return SubjectStats(
+    total: qs.length,
+    mcq: qs.where((q) => q.type == QuestionType.mcq).length,
+    ox: qs.where((q) => q.type == QuestionType.ox).length,
+  );
 });

@@ -12,7 +12,7 @@ import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/widgets.dart';
 
 /// 과목 화면(DESIGN_HANDOFF §2.1/§2.2). 하단 탭 IA의 두 번째 탭.
-/// 실재 과목만 렌더(§3-1). 선택 시 홈으로 복귀.
+/// 실재 과목만 렌더(§3-1). 진행률은 실제 세션 있을 때만(가짜 수치 금지).
 class SubjectsPage extends ConsumerWidget {
   const SubjectsPage({super.key});
 
@@ -37,7 +37,8 @@ class SubjectsPage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xxl),
             children: [
-              Text('과목', style: AppText.titleScreen.copyWith(color: c.textPrimary)),
+              Text('과목',
+                  style: AppText.titleScreen.copyWith(color: c.textPrimary)),
               const SizedBox(height: AppSpacing.xs),
               Text('풀 과목을 선택하세요',
                   style: AppText.caption.copyWith(color: c.textTertiary)),
@@ -52,14 +53,17 @@ class SubjectsPage extends ConsumerWidget {
   }
 }
 
-class _SubjectRow extends StatelessWidget {
+class _SubjectRow extends ConsumerWidget {
   final Subject subject;
   final bool selected;
   const _SubjectRow({required this.subject, required this.selected});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final stats = ref.watch(subjectStatsProvider(subject.id)).valueOrNull;
+    final resume = ref.watch(resumeInfoProvider(subject.id)).valueOrNull;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Material(
@@ -78,24 +82,59 @@ class _SubjectRow extends StatelessWidget {
               boxShadow: appCardShadow(c),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg + 2, AppSpacing.lg, AppSpacing.lg + 2, AppSpacing.lg),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.lg + 2,
+                  AppSpacing.lg, AppSpacing.lg + 2, AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(subject.name,
-                        style: AppText.choice.copyWith(
-                            color: c.textPrimary, fontWeight: FontWeight.w700)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(subject.name,
+                            style: AppText.choice.copyWith(
+                                color: c.textPrimary,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                      if (selected)
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                              color: c.brand, shape: BoxShape.circle),
+                          child: const Icon(Icons.check,
+                              size: 15, color: Colors.white),
+                        ),
+                    ],
                   ),
-                  if (selected)
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration:
-                          BoxDecoration(color: c.brand, shape: BoxShape.circle),
-                      child: const Icon(Icons.check,
-                          size: 15, color: Colors.white),
+                  if (stats != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text('총 ${stats.total}문항',
+                        style: AppText.caption.copyWith(color: c.textSecondary)),
+                  ],
+                  // 진행률: 실제 세션 있을 때만(가짜 수치 금지 §3-1).
+                  if (resume != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    ClipRRect(
+                      borderRadius: appPillRadius,
+                      child: LinearProgressIndicator(
+                        value: resume.total == 0
+                            ? 0
+                            : resume.lastIndex / resume.total,
+                        minHeight: 6,
+                        color: c.brand,
+                        backgroundColor: c.selTint,
+                      ),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text('${resume.lastIndex} / ${resume.total} 진행 중',
+                        style:
+                            AppText.caption.copyWith(color: c.textTertiary)),
+                  ] else ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text('아직 시작하지 않음',
+                        style:
+                            AppText.caption.copyWith(color: c.textTertiary)),
+                  ],
                 ],
               ),
             ),
