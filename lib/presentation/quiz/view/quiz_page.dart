@@ -445,8 +445,11 @@ class _ResultView extends StatelessWidget {
                       const SizedBox(width: AppSpacing.sm + 2),
                       Expanded(
                         flex: 3,
-                        child:
-                            PrimaryButton(label: '다시 풀기', onPressed: onRetry),
+                        child: PrimaryButton(
+                            label: state.mode == QuizMode.quick
+                                ? '다시 10문제'
+                                : '다시 풀기',
+                            onPressed: onRetry),
                       ),
                     ],
                   ),
