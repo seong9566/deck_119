@@ -315,6 +315,7 @@ class _QuestionView extends ConsumerWidget {
       label = state.isLast ? '결과 보기' : '다음';
       onPressed = state.revealed ? vm.next : null; // 채점 전 비활성
     }
+    final primary = PrimaryButton(label: label, onPressed: onPressed);
     return Container(
       decoration: BoxDecoration(
         color: c.surface,
@@ -325,7 +326,18 @@ class _QuestionView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl, AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
-          child: PrimaryButton(label: label, onPressed: onPressed),
+          child: state.canGoPrev
+              ? Row(
+                  children: [
+                    Expanded(
+                      child:
+                          SecondaryButton(label: '이전', onPressed: vm.prev),
+                    ),
+                    const SizedBox(width: AppSpacing.sm + 2),
+                    Expanded(flex: 3, child: primary),
+                  ],
+                )
+              : primary,
         ),
       ),
     );

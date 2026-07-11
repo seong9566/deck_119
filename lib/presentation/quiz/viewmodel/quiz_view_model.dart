@@ -25,7 +25,9 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
         startIndex = info.lastIndex;
       }
     }
-    return QuizState.initial(questions, arg.mode).copyWith(index: startIndex);
+    // 이어풀기 시작 위치를 뒤로 이동 하한으로 둔다(그 앞은 이번 세션 미응답).
+    return QuizState.initial(questions, arg.mode)
+        .copyWith(index: startIndex, minIndex: startIndex);
   }
 
   /// 선택지 응답.
@@ -42,9 +44,9 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
       return;
     }
 
-    if (s.revealed) return;
+    if (s.revealed) return; // 이미 채점된 문항은 재응답 불가
     await ref.read(submitAnswerProvider)(s.current, choiceIndex);
-    state = AsyncData(s.copyWith(answers: answers, revealed: true));
+    state = AsyncData(s.copyWith(answers: answers));
   }
 
   /// 다음 문항으로.
@@ -66,9 +68,19 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
       _clearSessionIfNormal();
     } else {
       final nextIndex = s.index + 1;
-      state = AsyncData(s.copyWith(index: nextIndex, revealed: false));
-      _saveSessionIfNormal(nextIndex);
+      state = AsyncData(s.copyWith(index: nextIndex));
+      // 아직 안 푼 새 문항으로 나아갈 때만 이어풀기 위치 저장.
+      // 뒤로 갔다 되돌아오는 중이면 최전방 위치를 유지한다.
+      if (s.answers[nextIndex] == null) _saveSessionIfNormal(nextIndex);
     }
+  }
+
+  /// 이전 문항으로. 세션 시작 위치(minIndex)보다 앞으로는 못 간다.
+  /// 이어풀기 위치는 최전방을 유지하므로 여기서 저장하지 않는다.
+  void prev() {
+    final s = state.value;
+    if (s == null || s.finished || !s.canGoPrev) return;
+    state = AsyncData(s.copyWith(index: s.index - 1));
   }
 
   /// 시험 제출 → 전 문항 일괄 채점·기록 후 결과로 종료(exam 전용).
