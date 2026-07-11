@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:isar/isar.dart';
 
 import 'presentation/app_router.dart';
 
 import 'data/datasources/content_data_source.dart';
-import 'data/datasources/local/isar_progress_data_source.dart';
-import 'data/datasources/local/isar_session_data_source.dart';
-import 'data/datasources/local/isar_settings_data_source.dart';
+import 'data/datasources/local/app_database.dart';
+import 'data/datasources/local/drift_progress_data_source.dart';
+import 'data/datasources/local/drift_session_data_source.dart';
+import 'data/datasources/local/drift_settings_data_source.dart';
 import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/question_repository_impl.dart';
 import 'data/repositories/session_repository_impl.dart';
@@ -26,9 +26,10 @@ import 'domain/usecases/submit_answer.dart';
 
 /// 의존성 주입(조립). Presentation은 UseCase만 watch하고 구현을 모른다.
 
-/// Isar 인스턴스. `main()`에서 open 후 ProviderScope override로 주입한다.
-final isarProvider = Provider<Isar>(
-  (ref) => throw UnimplementedError('isarProvider must be overridden in main()'),
+/// Drift DB. `main()`에서 open 후 ProviderScope override로 주입한다.
+final appDatabaseProvider = Provider<AppDatabase>(
+  (ref) =>
+      throw UnimplementedError('appDatabaseProvider must be overridden in main()'),
 );
 
 /// go_router. ProviderScope 단위로 1개(테스트 격리 + 앱 내 안정).
@@ -36,25 +37,25 @@ final routerProvider = Provider<GoRouter>((ref) => createRouter());
 
 // DataSource
 final _contentDataSourceProvider = Provider((ref) => ContentDataSource());
-final _isarProgressDataSourceProvider =
-    Provider((ref) => IsarProgressDataSource(ref.watch(isarProvider)));
-final _isarSessionDataSourceProvider =
-    Provider((ref) => IsarSessionDataSource(ref.watch(isarProvider)));
-final _isarSettingsDataSourceProvider =
-    Provider((ref) => IsarSettingsDataSource(ref.watch(isarProvider)));
+final _progressDataSourceProvider =
+    Provider((ref) => DriftProgressDataSource(ref.watch(appDatabaseProvider)));
+final _sessionDataSourceProvider =
+    Provider((ref) => DriftSessionDataSource(ref.watch(appDatabaseProvider)));
+final _settingsDataSourceProvider =
+    Provider((ref) => DriftSettingsDataSource(ref.watch(appDatabaseProvider)));
 
 // Repository (port ← impl)
 final questionRepositoryProvider = Provider<QuestionRepository>(
   (ref) => QuestionRepositoryImpl(ref.watch(_contentDataSourceProvider)),
 );
 final progressRepositoryProvider = Provider<ProgressRepository>(
-  (ref) => ProgressRepositoryImpl(ref.watch(_isarProgressDataSourceProvider)),
+  (ref) => ProgressRepositoryImpl(ref.watch(_progressDataSourceProvider)),
 );
 final sessionRepositoryProvider = Provider<SessionRepository>(
-  (ref) => SessionRepositoryImpl(ref.watch(_isarSessionDataSourceProvider)),
+  (ref) => SessionRepositoryImpl(ref.watch(_sessionDataSourceProvider)),
 );
 final settingsRepositoryProvider = Provider<SettingsRepository>(
-  (ref) => SettingsRepositoryImpl(ref.watch(_isarSettingsDataSourceProvider)),
+  (ref) => SettingsRepositoryImpl(ref.watch(_settingsDataSourceProvider)),
 );
 
 // UseCase

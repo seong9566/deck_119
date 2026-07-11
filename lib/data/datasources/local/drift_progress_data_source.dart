@@ -1,54 +1,49 @@
-import 'package:isar/isar.dart';
+import 'app_database.dart';
 
-import 'collections/attempt_record.dart';
-import 'collections/wrong_entry.dart';
+/// 진척·오답의 Drift 저장소. (구 IsarProgressDataSource 대체 — 시그니처 동일)
+class DriftProgressDataSource {
+  final AppDatabase _db;
+  DriftProgressDataSource(this._db);
 
-/// 진척·오답의 Isar 저장소(BUILD_PLAN §2). 인메모리 구현을 대체한다.
-class IsarProgressDataSource {
-  final Isar _isar;
-  IsarProgressDataSource(this._isar);
-
-  /// 채점 결과 기록: 오답이면 WrongEntry put(정답이면 즉시 제거),
+  /// 채점 결과 기록: 오답이면 WrongEntry upsert(정답이면 즉시 제거),
   /// 시도 이력은 AttemptRecord로 append.
   Future<void> record(String questionId,
       {required bool correct, required int nowMs}) async {
-    await _isar.writeTxn(() async {
+    await _db.transaction(() async {
       if (correct) {
-        await _isar.wrongEntrys
-            .deleteByQuestionId(questionId); // 즉시 제거 규칙
+        await (_db.delete(_db.wrongEntries)
+              ..where((t) => t.questionId.equals(questionId)))
+            .go();
       } else {
-        await _isar.wrongEntrys.putByQuestionId(
-          WrongEntry()
-            ..questionId = questionId
-            ..addedAtMs = nowMs,
-        );
+        await _db.into(_db.wrongEntries).insertOnConflictUpdate(
+              WrongEntriesCompanion.insert(
+                  questionId: questionId, addedAtMs: nowMs),
+            );
       }
-      await _isar.attemptRecords.put(
-        AttemptRecord()
-          ..questionId = questionId
-          ..isCorrect = correct
-          ..timestampMs = nowMs,
-      );
+      await _db.into(_db.attemptRecords).insert(
+            AttemptRecordsCompanion.insert(
+                questionId: questionId, isCorrect: correct, timestampMs: nowMs),
+          );
     });
   }
 
   /// 오답 세트(문제 id).
   Future<Set<String>> wrongIds() async {
-    final entries = await _isar.wrongEntrys.where().findAll();
-    return entries.map((e) => e.questionId).toSet();
+    final rows = await _db.select(_db.wrongEntries).get();
+    return rows.map((e) => e.questionId).toSet();
   }
 
   /// 오답 세트에서 제거.
   Future<void> clear(String questionId) async {
-    await _isar.writeTxn(() async {
-      await _isar.wrongEntrys.deleteByQuestionId(questionId);
-    });
+    await (_db.delete(_db.wrongEntries)
+          ..where((t) => t.questionId.equals(questionId)))
+        .go();
   }
 
   /// 시도 로그 집계: (총시도, 정답, 서로다른 문항수, 연속학습일수).
   Future<({int attempts, int correct, int distinct, int streak})>
       stats() async {
-    final all = await _isar.attemptRecords.where().findAll();
+    final all = await _db.select(_db.attemptRecords).get();
     var correct = 0;
     final ids = <String>{};
     final days = <int>{}; // 로컬 자정 기준 epoch day

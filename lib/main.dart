@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'data/datasources/local/isar_service.dart';
+import 'data/datasources/local/app_database.dart';
 import 'di.dart';
 import 'presentation/settings/theme_mode_mapper.dart';
 import 'presentation/settings/viewmodel/settings_view_model.dart';
@@ -9,10 +9,10 @@ import 'presentation/shared/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final isar = await IsarService.open();
+  final db = AppDatabase();
   runApp(
     ProviderScope(
-      overrides: [isarProvider.overrideWithValue(isar)],
+      overrides: [appDatabaseProvider.overrideWithValue(db)],
       child: const Deck119App(),
     ),
   );

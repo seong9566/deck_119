@@ -1,9 +1,9 @@
 import '../../domain/entities/recent_session.dart';
 import '../../domain/repositories/session_repository.dart';
-import '../datasources/local/isar_session_data_source.dart';
+import '../datasources/local/drift_session_data_source.dart';
 
 class SessionRepositoryImpl implements SessionRepository {
-  final IsarSessionDataSource _local;
+  final DriftSessionDataSource _local;
   SessionRepositoryImpl(this._local);
 
   @override

@@ -1,10 +1,10 @@
 import '../../domain/entities/progress_stats.dart';
 import '../../domain/repositories/progress_repository.dart';
-import '../datasources/local/isar_progress_data_source.dart';
+import '../datasources/local/drift_progress_data_source.dart';
 
-/// 진척·오답 저장소 구현(Isar). 인터페이스 시그니처는 유지(Presentation 영향 0).
+/// 진척·오답 저장소 구현(Drift). 인터페이스 시그니처는 유지(Presentation 영향 0).
 class ProgressRepositoryImpl implements ProgressRepository {
-  final IsarProgressDataSource _local;
+  final DriftProgressDataSource _local;
 
   ProgressRepositoryImpl(this._local);
 
