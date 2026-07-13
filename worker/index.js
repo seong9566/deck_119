@@ -122,13 +122,21 @@ function validate(items) {
     }));
 }
 
+// 처리 중 예외가 프로세스를 죽이지 않게 최종 방어(claim 트랜잭션 실패 등).
+process.on('unhandledRejection', (e) =>
+  console.error('[unhandledRejection]', e && e.message ? e.message : e));
+
 // pending 요청 감시(추가되는 즉시 처리).
 db.collection(COLLECTION)
   .where('status', '==', 'pending')
   .onSnapshot(
     (snap) => {
       snap.docChanges().forEach((ch) => {
-        if (ch.type === 'added') handle(ch.doc);
+        // handle은 fire-and-forget이라 rejection을 반드시 여기서 삼킨다(크래시 방지).
+        if (ch.type === 'added') {
+          handle(ch.doc).catch((e) =>
+            console.error(`[handle] ${ch.doc.id} 실패:`, e && e.message ? e.message : e));
+        }
       });
     },
     (err) => console.error('watch error:', err),

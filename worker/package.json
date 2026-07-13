@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:awake": "caffeinate -s node index.js"
+    "start:awake": "caffeinate -s sh run-awake.sh"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0"
