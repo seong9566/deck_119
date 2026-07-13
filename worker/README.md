@@ -43,7 +43,20 @@ npm run start:awake    # caffeinate로 시스템 잠자기 방지(권장)
 ```
 
 - **노트북을 덮으면 잠들어 멈춤** → 클램셸/전원설정 주의.
-- 죽어도 살아나게 하려면 `pm2 start index.js --name deck119-worker` 또는 launchd 등록.
+
+### 상시 구동 (launchd — 로그인 자동 시작 + 자동 재시작, 권장)
+
+`launchd/com.seong.deck119.worker.plist`를 설치하면 로그인 시 자동 시작·죽으면 재시작·caffeinate 슬립 방지가 모두 걸린다.
+
+```bash
+cp worker/launchd/com.seong.deck119.worker.plist ~/Library/LaunchAgents/
+launchctl load -w ~/Library/LaunchAgents/com.seong.deck119.worker.plist
+```
+
+- ⚠️ **claude 인증은 키체인에 저장**된다. plist `EnvironmentVariables`에 `HOME`·`USER`·`LOGNAME`이 **반드시** 있어야 keychain을 열어 인증한다(없으면 `"Not logged in"`으로 생성 실패). `GEN_CLI`는 claude **실제 바이너리 절대경로**(zsh alias가 아님 — `command -v claude`로 확인).
+- 경로·사용자명은 이 맥(`ihyeonseong`) 기준 하드코딩 — 다른 환경이면 plist를 수정.
+- 로그: `~/Library/Logs/deck119-worker.log` (`tail -f`로 관찰). 상태: `launchctl list | grep deck119`.
+- 중지/해제: `launchctl unload ~/Library/LaunchAgents/com.seong.deck119.worker.plist`.
 
 ## 동작 확인
 

@@ -1,4 +1,11 @@
 'use strict';
+// launchd 등 파일 리다이렉트에서 stdout이 블록버퍼링되면 로그가 안 보인다 → 즉시 flush.
+try {
+  process.stdout._handle?.setBlocking?.(true);
+  process.stderr._handle?.setBlocking?.(true);
+} catch (_) {
+  /* 환경에 따라 _handle이 없을 수 있음(무시) */
+}
 const admin = require('firebase-admin');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { execFile } = require('child_process');

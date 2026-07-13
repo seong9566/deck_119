@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.seong.deck119.worker</string>
+
+  <!-- caffeinate(-s: 시스템 슬립 방지)로 감싼 워커. node 죽으면 caffeinate 종료 → KeepAlive가 재시작. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/caffeinate</string>
+    <string>-s</string>
+    <string>/opt/homebrew/bin/node</string>
+    <string>index.js</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/ihyeonseong/Desktop/workspace/side_project/deck_119/worker</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- launchd 최소 PATH 보강(node가 하위 도구 탐색). -->
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <!-- claude는 alias가 아니라 실제 바이너리 절대경로로 실행(execFile은 alias 무시). -->
+    <key>GEN_CLI</key>
+    <string>/Users/ihyeonseong/.local/bin/claude</string>
+    <!-- claude 인증(키체인) 접근용. HOME만으론 부족 — USER/LOGNAME 없으면 keychain을 못 열어 "Not logged in". -->
+    <key>HOME</key>
+    <string>/Users/ihyeonseong</string>
+    <key>USER</key>
+    <string>ihyeonseong</string>
+    <key>LOGNAME</key>
+    <string>ihyeonseong</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <!-- 죽으면 자동 재시작(워커 크래시 방어 이중화). -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ihyeonseong/Library/Logs/deck119-worker.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ihyeonseong/Library/Logs/deck119-worker.log</string>
+</dict>
+</plist>
