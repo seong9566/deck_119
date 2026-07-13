@@ -64,6 +64,34 @@ void _closeToHome(BuildContext context) {
   }
 }
 
+/// 풀이 중 나가기 확인 — "그만 풀기"를 누르면 종료(뒤로가기 아님).
+Future<void> _confirmExit(BuildContext context) async {
+  final c = context.colors;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: c.surface,
+      title: Text('문제 그만 풀기',
+          style: AppText.choice
+              .copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+      content: Text('지금 나가면 풀던 문제가 끝나요.\n그만 풀까요?',
+          style: AppText.caption.copyWith(color: c.textSecondary, height: 1.5)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: Text('계속 풀기', style: TextStyle(color: c.textSecondary)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text('그만 풀기',
+              style: TextStyle(color: c.brand, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    ),
+  );
+  if (ok == true && context.mounted) _closeToHome(context);
+}
+
 /// 풀이·시험·로딩·에러 공용 풀스크린 셸(탭바 없음, 배경 background).
 class _QuizScaffold extends StatelessWidget {
   final Widget child;
@@ -281,7 +309,7 @@ class _QuestionView extends ConsumerWidget {
                 total: state.total,
                 value: state.progress,
                 modeLabel: modeTitle(args.mode),
-                onClose: () => _closeToHome(context),
+                onClose: () => _confirmExit(context),
               ),
             ),
             Expanded(
