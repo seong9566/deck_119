@@ -101,7 +101,7 @@ class _QuizScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
-      body: SafeArea(child: child),
+      body: SafeArea(child: ResponsiveBody(child: child)),
     );
   }
 }
@@ -301,39 +301,43 @@ class _QuestionView extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
-              child: ProgressHeader(
-                position: state.position,
-                total: state.total,
-                value: state.progress,
-                modeLabel: modeTitle(args.mode),
-                onClose: () => _confirmExit(context),
+            ResponsiveBody(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+                child: ProgressHeader(
+                  position: state.position,
+                  total: state.total,
+                  value: state.progress,
+                  modeLabel: modeTitle(args.mode),
+                  onClose: () => _confirmExit(context),
+                ),
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
-                children: [
-                  if (args.mode == QuizMode.ai) ...[
-                    const _AiReferenceNotice(),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-                  QuestionCard(type: q.type, stem: q.stem),
-                  const SizedBox(height: AppSpacing.xl),
-                  _choices(q, vm),
-                  if (state.revealed) ...[
+              child: ResponsiveBody(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
+                  children: [
+                    if (args.mode == QuizMode.ai) ...[
+                      const _AiReferenceNotice(),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    QuestionCard(type: q.type, stem: q.stem),
                     const SizedBox(height: AppSpacing.xl),
-                    ExplanationCard(
-                      correct: correct,
-                      explanation: q.explanation,
-                      breakdown: q.breakdown,
-                      stem: q.stem,
-                    ),
+                    _choices(q, vm),
+                    if (state.revealed) ...[
+                      const SizedBox(height: AppSpacing.xl),
+                      ExplanationCard(
+                        correct: correct,
+                        explanation: q.explanation,
+                        breakdown: q.breakdown,
+                        stem: q.stem,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             _bottomBar(context, vm),
@@ -396,18 +400,20 @@ class _QuestionView extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl, AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
-          child: state.canGoPrev
-              ? Row(
-                  children: [
-                    Expanded(
-                      child:
-                          SecondaryButton(label: '이전', onPressed: vm.prev),
-                    ),
-                    const SizedBox(width: AppSpacing.sm + 2),
-                    Expanded(flex: 3, child: primary),
-                  ],
-                )
-              : primary,
+          child: ResponsiveBody(
+            child: state.canGoPrev
+                ? Row(
+                    children: [
+                      Expanded(
+                        child:
+                            SecondaryButton(label: '이전', onPressed: vm.prev),
+                      ),
+                      const SizedBox(width: AppSpacing.sm + 2),
+                      Expanded(flex: 3, child: primary),
+                    ],
+                  )
+                : primary,
+          ),
         ),
       ),
     );
@@ -438,55 +444,60 @@ class _ResultView extends StatelessWidget {
         child: Column(
           children: [
             // 상단 바: 채점 결과 + 닫기
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
-              child: Row(
-                children: [
-                  Text('채점 결과',
-                      style: AppText.label
-                          .copyWith(color: c.textSecondary, letterSpacing: 0)),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => _closeToHome(context),
-                    icon: const Icon(Icons.close),
-                    color: c.textTertiary,
-                    iconSize: 20,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: '닫기',
-                  ),
-                ],
+            ResponsiveBody(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
+                child: Row(
+                  children: [
+                    Text('채점 결과',
+                        style: AppText.label.copyWith(
+                            color: c.textSecondary, letterSpacing: 0)),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => _closeToHome(context),
+                      icon: const Icon(Icons.close),
+                      color: c.textTertiary,
+                      iconSize: 20,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: '닫기',
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xl),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                    child:
-                        ScoreView(correct: state.correctCount, total: state.total),
-                  ),
-                  if (wrong.isEmpty)
-                    const _PerfectCard()
-                  else ...[
-                    _ReviewHeader(count: wrong.length),
-                    const SizedBox(height: AppSpacing.md),
-                    for (final i in wrong)
-                      ReviewCard(
-                        order: i + 1,
-                        stem: state.questions[i].stem,
-                        myAnswer: state.answers[i] == null
-                            ? '미응답'
-                            : state.questions[i].choices[state.answers[i]!],
-                        correctAnswer: state
-                            .questions[i].choices[state.questions[i].answerIndex],
-                        explanation: state.questions[i].explanation,
-                        breakdown: state.questions[i].breakdown,
-                      ),
+              child: ResponsiveBody(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xl),
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      child: ScoreView(
+                          correct: state.correctCount, total: state.total),
+                    ),
+                    if (wrong.isEmpty)
+                      const _PerfectCard()
+                    else ...[
+                      _ReviewHeader(count: wrong.length),
+                      const SizedBox(height: AppSpacing.md),
+                      for (final i in wrong)
+                        ReviewCard(
+                          order: i + 1,
+                          stem: state.questions[i].stem,
+                          myAnswer: state.answers[i] == null
+                              ? '미응답'
+                              : state.questions[i].choices[state.answers[i]!],
+                          correctAnswer: state.questions[i]
+                              .choices[state.questions[i].answerIndex],
+                          explanation: state.questions[i].explanation,
+                          breakdown: state.questions[i].breakdown,
+                        ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             // 하단 고정: 홈으로 / 다시 풀기
@@ -500,23 +511,25 @@ class _ResultView extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.xl,
                       AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SecondaryButton(
-                            label: '홈으로',
-                            onPressed: () => _closeToHome(context)),
-                      ),
-                      const SizedBox(width: AppSpacing.sm + 2),
-                      Expanded(
-                        flex: 3,
-                        child: PrimaryButton(
-                            label: state.mode == QuizMode.quick
-                                ? '다시 10문제'
-                                : '다시 풀기',
-                            onPressed: onRetry),
-                      ),
-                    ],
+                  child: ResponsiveBody(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SecondaryButton(
+                              label: '홈으로',
+                              onPressed: () => _closeToHome(context)),
+                        ),
+                        const SizedBox(width: AppSpacing.sm + 2),
+                        Expanded(
+                          flex: 3,
+                          child: PrimaryButton(
+                              label: state.mode == QuizMode.quick
+                                  ? '다시 10문제'
+                                  : '다시 풀기',
+                              onPressed: onRetry),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

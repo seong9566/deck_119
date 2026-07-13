@@ -84,7 +84,8 @@ class HomePage extends ConsumerWidget {
             ref.watch(aiRecoveryProvider);
             final recent = ref.watch(recentSessionCardProvider).valueOrNull;
 
-            return ListView(
+            return ResponsiveBody(
+              child: ListView(
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.huge),
               children: [
@@ -159,6 +160,7 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
             );
           },
         ),

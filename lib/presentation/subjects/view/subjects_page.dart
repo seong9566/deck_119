@@ -41,31 +41,34 @@ class SubjectsPage extends ConsumerWidget {
             final rounds = all.where((x) => x.group == '원형').toList();
             final difficulty =
                 all.where((x) => x.group == '심화' || x.group == '전체').toList();
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.huge),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: Text('과목',
-                      style: AppText.label.copyWith(
-                          color: c.textTertiary, letterSpacing: 0.3)),
-                ),
-                Text(subjectName ?? '소방관계법규',
-                    style:
-                        AppText.titleScreen.copyWith(color: c.textPrimary)),
-                const SizedBox(height: AppSpacing.xs),
-                Text('회차별 또는 난이도별로 문제집을 선택하세요',
-                    style: AppText.caption.copyWith(color: c.textTertiary)),
-                if (rounds.isNotEmpty) ...[
-                  _SectionLabel('회차별 · 원형(동형모의고사)'),
-                  for (final col in rounds) _CollectionRow(col: col),
+            final twoCol = context.isTablet;
+            return ResponsiveBody(
+              maxWidth: AppBreakpoints.gridMax,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.huge),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    child: Text('과목',
+                        style: AppText.label.copyWith(
+                            color: c.textTertiary, letterSpacing: 0.3)),
+                  ),
+                  Text(subjectName ?? '소방관계법규',
+                      style: AppText.titleScreen.copyWith(color: c.textPrimary)),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('회차별 또는 난이도별로 문제집을 선택하세요',
+                      style: AppText.caption.copyWith(color: c.textTertiary)),
+                  if (rounds.isNotEmpty) ...[
+                    _SectionLabel('회차별 · 원형(동형모의고사)'),
+                    _CollectionGrid(cols: rounds, twoColumn: twoCol),
+                  ],
+                  if (difficulty.isNotEmpty) ...[
+                    _SectionLabel('난이도별'),
+                    _CollectionGrid(cols: difficulty, twoColumn: twoCol),
+                  ],
                 ],
-                if (difficulty.isNotEmpty) ...[
-                  _SectionLabel('난이도별'),
-                  for (final col in difficulty) _CollectionRow(col: col),
-                ],
-              ],
+              ),
             );
           },
         ),
@@ -87,6 +90,41 @@ class _SectionLabel extends StatelessWidget {
           style: AppText.label
               .copyWith(color: c.textTertiary, letterSpacing: 0.3)),
     );
+  }
+}
+
+/// 컬렉션 목록 레이아웃 — 폰은 1열, 태블릿은 2열 그리드.
+/// [_CollectionRow]가 자체 하단 여백(md)을 가지므로 세로 간격은 그대로,
+/// 2열에서는 [Row]+[Expanded]로 가로 균등 배치하고 사이에 md 간격을 준다.
+class _CollectionGrid extends StatelessWidget {
+  final List<QuestionCollection> cols;
+  final bool twoColumn;
+  const _CollectionGrid({required this.cols, required this.twoColumn});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!twoColumn) {
+      return Column(
+        children: [for (final col in cols) _CollectionRow(col: col)],
+      );
+    }
+    final rows = <Widget>[];
+    for (var i = 0; i < cols.length; i += 2) {
+      final hasRight = i + 1 < cols.length;
+      rows.add(Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _CollectionRow(col: cols[i])),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: hasRight
+                ? _CollectionRow(col: cols[i + 1])
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ));
+    }
+    return Column(children: rows);
   }
 }
 
