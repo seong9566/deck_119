@@ -50,7 +50,7 @@ class SetModePage extends ConsumerWidget {
         elevation: 0,
         foregroundColor: c.textPrimary,
         title: Text(title,
-            style: AppText.choice.copyWith(color: c.textPrimary, fontSize: 17)),
+            style: AppText.choice.copyWith(color: c.textPrimary, fontSize: 16)),
       ),
       body: SafeArea(
         top: false,
@@ -136,7 +136,7 @@ class _SetHeader extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(meta!,
                 style: AppText.caption
-                    .copyWith(color: c.textSecondary, fontSize: 14)),
+                    .copyWith(color: c.textSecondary, fontSize: 13)),
           ],
         ],
       ),
@@ -191,7 +191,7 @@ class _ContinueTile extends StatelessWidget {
                           style: AppText.choice.copyWith(
                               color: c.textPrimary,
                               fontWeight: FontWeight.w700,
-                              fontSize: 17)),
+                              fontSize: 16)),
                     ],
                   ),
                 ),

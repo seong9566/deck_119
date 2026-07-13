@@ -37,7 +37,7 @@ class AnswerBanner extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(correct ? '정답입니다' : '오답입니다',
-              style: AppText.choice.copyWith(color: ink, fontSize: 15)),
+              style: AppText.choice.copyWith(color: ink, fontSize: 14)),
         ],
       ),
     );

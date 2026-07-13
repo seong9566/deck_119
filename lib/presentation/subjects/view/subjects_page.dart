@@ -126,7 +126,7 @@ class _CollectionRow extends StatelessWidget {
                       children: [
                         Text(col.name,
                             style: AppText.choice
-                                .copyWith(color: c.textPrimary, fontSize: 17)),
+                                .copyWith(color: c.textPrimary, fontSize: 16)),
                         const SizedBox(height: 3),
                         Text('${col.count}문항',
                             style: AppText.caption

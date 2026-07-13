@@ -85,7 +85,7 @@ class _TabItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                   color: color,
                 ),

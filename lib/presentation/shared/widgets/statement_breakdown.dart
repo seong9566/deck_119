@@ -44,7 +44,7 @@ class StatementBreakdown extends StatelessWidget {
         Row(
           children: [
             Text('옳은 보기',
-                style: AppText.choice.copyWith(color: c.textPrimary, fontSize: 14)),
+                style: AppText.choice.copyWith(color: c.textPrimary, fontSize: 13)),
             const SizedBox(width: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -114,12 +114,12 @@ class _Row extends StatelessWidget {
               children: [
                 Text(text,
                     style: AppText.body.copyWith(
-                        color: c.textPrimary, fontSize: 13.5, height: 1.5)),
+                        color: c.textPrimary, fontSize: 12.5, height: 1.5)),
                 if (!ok && verdict.note.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text('→ ${verdict.note}',
                       style: AppText.caption.copyWith(
-                          color: c.wrongInk, height: 1.5, fontSize: 12.5)),
+                          color: c.wrongInk, height: 1.5, fontSize: 11.5)),
                 ],
               ],
             ),
@@ -130,7 +130,7 @@ class _Row extends StatelessWidget {
             padding: const EdgeInsets.only(top: 3),
             child: Text(ok ? 'O' : 'X',
                 style: AppText.label
-                    .copyWith(color: ink, fontSize: 13, letterSpacing: 0)),
+                    .copyWith(color: ink, fontSize: 12, letterSpacing: 0)),
           ),
         ],
       ),
