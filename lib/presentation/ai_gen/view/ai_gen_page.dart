@@ -1,0 +1,304 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../domain/entities/question.dart';
+import '../../../domain/entities/quiz_mode.dart';
+import '../../../domain/repositories/ai_question_repository.dart';
+import '../../app_router.dart';
+import '../../shared/theme/app_colors.dart';
+import '../../shared/theme/app_radius_shape.dart';
+import '../../shared/theme/app_spacing.dart';
+import '../../shared/theme/app_typography.dart';
+import '../../shared/widgets/widgets.dart';
+import '../viewmodel/ai_gen_view_model.dart';
+
+/// AI 문제 생성 옵션 화면. 년도(2025/2026/전체)·문항 수·유형 선택 → 백엔드 호출 →
+/// 성공 시 풀이(ai 모드)로 이동. AI 문항은 "참고용"(ADR-0002).
+class AiGenPage extends ConsumerStatefulWidget {
+  static const subjectId = 'fire-law';
+  const AiGenPage({super.key});
+
+  @override
+  ConsumerState<AiGenPage> createState() => _AiGenPageState();
+}
+
+class _AiGenPageState extends ConsumerState<AiGenPage> {
+  String _year = 'all'; // "2025" | "2026" | "all"
+  int _count = 3;
+  String _type = 'mcq'; // "mcq" | "ox" | "mixed"
+
+  void _onResult(AsyncValue<List<Question>?> next) {
+    next.whenOrNull(
+      data: (questions) {
+        if (questions == null) return; // 대기 상태
+        ref.invalidate(aiGenProvider); // 재진입 시 중복 이동 방지
+        if (questions.isEmpty) {
+          _snack('생성된 문제가 없어요. 다시 시도해 주세요.');
+          return;
+        }
+        context.push(Routes.quizLink(AiGenPage.subjectId, QuizMode.ai));
+      },
+      error: (e, _) => _snack(
+        e is AiGenException ? e.message : '생성에 실패했어요. 다시 시도해 주세요.',
+      ),
+    );
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  void _generate() {
+    ref.read(aiGenProvider.notifier).run(
+          subjectId: AiGenPage.subjectId,
+          options: (yearScope: _year, count: _count, type: _type),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(aiGenProvider, (_, next) => _onResult(next));
+    final c = context.colors;
+    final loading = ref.watch(aiGenProvider).isLoading;
+
+    return Scaffold(
+      backgroundColor: c.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
+              child: Row(
+                children: [
+                  Text('AI 문제 생성',
+                      style: AppText.titleScreen.copyWith(color: c.textPrimary)),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: loading ? null : () => _closeToHome(context),
+                    icon: const Icon(Icons.close),
+                    color: c.textTertiary,
+                    iconSize: 20,
+                    tooltip: '닫기',
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xxl),
+                children: [
+                  const _ReferenceNotice(),
+                  const SizedBox(height: AppSpacing.xl),
+                  _OptionGroup(
+                    label: '년도',
+                    options: const [
+                      ('2025', '2025년'),
+                      ('2026', '2026년'),
+                      ('all', '전체'),
+                    ],
+                    selected: _year,
+                    onSelect: (v) => setState(() => _year = v),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  _OptionGroup(
+                    label: '유형',
+                    options: const [
+                      ('mcq', '객관식'),
+                      ('ox', 'O/X'),
+                      ('mixed', '혼합'),
+                    ],
+                    selected: _type,
+                    onSelect: (v) => setState(() => _type = v),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  _OptionGroup(
+                    label: '문항 수',
+                    options: const [('3', '3문항'), ('5', '5문항')],
+                    selected: '$_count',
+                    onSelect: (v) => setState(() => _count = int.parse(v)),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: c.surface,
+                border: Border(top: BorderSide(color: c.outline)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.xl,
+                      AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
+                  child: loading
+                      ? _GeneratingButton(color: c.brand)
+                      : PrimaryButton(label: 'AI로 문제 만들기', onPressed: _generate),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _closeToHome(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(Routes.home);
+  }
+}
+
+/// 참고용 고지(ADR-0002 필수 안전장치).
+class _ReferenceNotice extends StatelessWidget {
+  const _ReferenceNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.brandTint,
+        border: Border.all(color: c.brand),
+        borderRadius: appTileRadius,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.auto_awesome, size: 18, color: c.brandInk),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              '년도별 기출을 바탕으로 AI가 새 문제를 만들어요.\nAI가 만든 문제이니 참고용으로만 활용하는 것을 권장해요.',
+              style: AppText.caption.copyWith(color: c.brandInk, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 라벨 + 선택 pill 그룹(단일 선택).
+class _OptionGroup extends StatelessWidget {
+  final String label;
+  final List<(String, String)> options; // (value, label)
+  final String selected;
+  final ValueChanged<String> onSelect;
+  const _OptionGroup({
+    required this.label,
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppText.label.copyWith(color: c.textTertiary)),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            for (final (value, text) in options) ...[
+              Expanded(
+                child: _Pill(
+                  text: text,
+                  selected: value == selected,
+                  onTap: () => onSelect(value),
+                ),
+              ),
+              if (value != options.last.$1)
+                const SizedBox(width: AppSpacing.sm),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  final String text;
+  final bool selected;
+  final VoidCallback onTap;
+  const _Pill(
+      {required this.text, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: selected ? c.brandTint : c.surface,
+      borderRadius: appTileRadius,
+      child: InkWell(
+        borderRadius: appTileRadius,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: appTileRadius,
+            border: Border.all(
+              color: selected ? c.brand : c.outline,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Center(
+              child: Text(
+                text,
+                style: AppText.choice.copyWith(
+                  color: selected ? c.brandInk : c.textSecondary,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 생성 중 버튼(스피너 + 문구, 비활성).
+class _GeneratingButton extends StatelessWidget {
+  final Color color;
+  const _GeneratingButton({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: null,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(52),
+        shape: appTileShape,
+        disabledBackgroundColor: color.withValues(alpha: .5),
+        disabledForegroundColor: Colors.white,
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+          ),
+          SizedBox(width: AppSpacing.sm),
+          Text('문제를 만드는 중…'),
+        ],
+      ),
+    );
+  }
+}

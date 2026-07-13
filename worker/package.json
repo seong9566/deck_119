@@ -1,0 +1,14 @@
+{
+  "name": "deck119-worker",
+  "description": "119덱 AI 문제 생성 워커 — Firestore 큐를 감시해 로컬 CLI로 생성",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:awake": "caffeinate -s node index.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

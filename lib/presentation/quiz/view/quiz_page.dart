@@ -221,7 +221,40 @@ String modeTitle(QuizMode mode) => switch (mode) {
       QuizMode.quick => '빠른 10문제',
       QuizMode.review => '오답 재풀이',
       QuizMode.exam => '시험 모드',
+      QuizMode.ai => 'AI 생성',
     };
+
+/// AI 생성 문항 상단 고지(ADR-0002 필수). "AI 생성·참고용" 배지 + 권장 문구.
+class _AiReferenceNotice extends StatelessWidget {
+  const _AiReferenceNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm + 1),
+      decoration: BoxDecoration(
+        color: c.brandTint,
+        border: Border.all(color: c.brand),
+        borderRadius: BorderRadius.circular(AppSpacing.sm),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome, size: 15, color: c.brandInk),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'AI가 만든 문제입니다. 참고용으로만 활용하는 것을 권장해요.',
+              style: AppText.caption.copyWith(color: c.brandInk),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _QuestionView extends ConsumerWidget {
   final QuizArgs args;
@@ -256,6 +289,10 @@ class _QuestionView extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.xl, AppSpacing.xs, AppSpacing.xl, AppSpacing.xl),
                 children: [
+                  if (args.mode == QuizMode.ai) ...[
+                    const _AiReferenceNotice(),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   QuestionCard(type: q.type, stem: q.stem),
                   const SizedBox(height: AppSpacing.xl),
                   _choices(q, vm),

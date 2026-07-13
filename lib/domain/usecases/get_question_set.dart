@@ -23,6 +23,9 @@ class GetQuestionSet {
       case QuizMode.review:
         final wrong = await _progress.getWrongIds();
         return all.where((q) => wrong.contains(q.id)).toList();
+      case QuizMode.ai:
+        // ai 세트는 런타임 생성분에서 주입되므로 저장소 로드 경로를 쓰지 않는다.
+        return const [];
     }
   }
 }

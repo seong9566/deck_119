@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../di.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../ai_gen/viewmodel/ai_gen_view_model.dart';
 import 'quiz_state.dart';
 
 /// 풀이 세션 인자(과목 + 모드 + 이어풀기 여부). 레코드 값 동등성으로 family 키.
@@ -15,8 +16,10 @@ final quizViewModelProvider = AsyncNotifierProvider.autoDispose
 class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> {
   @override
   Future<QuizState> build(QuizArgs arg) async {
-    final questions =
-        await ref.watch(getQuestionSetProvider)(arg.subjectId, arg.mode);
+    // ai 모드는 런타임 생성 세트를 핸드오프 홀더에서 주입(저장소 로드 아님).
+    final questions = arg.mode == QuizMode.ai
+        ? ref.read(generatedQuestionsProvider)
+        : await ref.watch(getQuestionSetProvider)(arg.subjectId, arg.mode);
 
     var startIndex = 0;
     var answers = List<int?>.filled(questions.length, null);
@@ -49,7 +52,10 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     }
 
     if (s.revealed) return; // 이미 채점된 문항은 재응답 불가
-    await ref.read(submitAnswerProvider)(s.current, choiceIndex);
+    // ai(참고용) 문항은 오답노트·통계에 기록하지 않는다(합성 id 오염 방지).
+    if (arg.mode != QuizMode.ai) {
+      await ref.read(submitAnswerProvider)(s.current, choiceIndex);
+    }
     state = AsyncData(s.copyWith(answers: answers));
     // 선택 즉시 세션에 반영 → 재진입 시 이 답·해설이 복원된다.
     _saveSessionIfNormal(s.index, answers);

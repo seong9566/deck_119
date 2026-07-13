@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'presentation/app_router.dart';
 
 import 'data/datasources/content_data_source.dart';
+import 'data/repositories/ai_question_repository_impl.dart';
+import 'domain/repositories/ai_question_repository.dart';
 import 'data/datasources/local/app_database.dart';
 import 'data/datasources/local/drift_progress_data_source.dart';
 import 'data/datasources/local/drift_session_data_source.dart';
@@ -56,6 +60,17 @@ final sessionRepositoryProvider = Provider<SessionRepository>(
 );
 final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepositoryImpl(ref.watch(_settingsDataSourceProvider)),
+);
+
+/// AI 문제 생성 저장소(Firestore 큐 중계 → 맥북 워커가 CLI로 생성).
+/// 기본 `(default)`가 아니라 명명된 DB(`deck-119-db`)를 사용.
+final aiQuestionRepositoryProvider = Provider<AiQuestionRepository>(
+  (ref) => AiQuestionRepositoryImpl(
+    FirebaseFirestore.instanceFor(
+      app: Firebase.app(),
+      databaseId: 'deck-119-db',
+    ),
+  ),
 );
 
 // UseCase

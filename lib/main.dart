@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +10,8 @@ import 'presentation/shared/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 네이티브 설정(iOS GoogleService-Info.plist / Android google-services.json) 기반 초기화.
+  await Firebase.initializeApp();
   final db = AppDatabase();
   runApp(
     ProviderScope(

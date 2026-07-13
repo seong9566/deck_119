@@ -1,6 +1,9 @@
 /// 문제 엔티티. 순수 Dart — Flutter·저장소를 모른다(클린 아키텍처 Domain).
 enum QuestionType { mcq, ox }
 
+/// 문항 출처. bundled=번들 검수 콘텐츠, ai=런타임 AI 생성(참고용).
+enum QuestionSource { bundled, ai }
+
 /// 개수형(<보기> 중 옳은 개수) 문항의 보기별 판정. 해설을 보기 단위로
 /// 쪼개 O/X와 교정을 보여주기 위한 데이터. label은 stem의 보기 기호(ㄱ·ㄴ…).
 class StatementVerdict {
@@ -36,6 +39,9 @@ class Question {
   /// 개수형 보기별 판정(비어 있으면 일반 문항 → 해설은 단일 텍스트로 렌더).
   final List<StatementVerdict> breakdown;
 
+  /// 문항 출처(기본 bundled). ai면 "참고용" 노출 대상.
+  final QuestionSource source;
+
   const Question({
     required this.id,
     required this.subjectId,
@@ -48,6 +54,7 @@ class Question {
     required this.difficulty,
     required this.tags,
     this.breakdown = const [],
+    this.source = QuestionSource.bundled,
   });
 
   bool isCorrect(int selectedIndex) => selectedIndex == answerIndex;

@@ -1,0 +1,7 @@
+{
+  "firestore": {
+    "database": "deck-119-db",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

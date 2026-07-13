@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/entities/quiz_mode.dart';
+import 'ai_gen/view/ai_gen_page.dart';
 import 'home/view/home_page.dart';
 import 'home/view/set_mode_page.dart';
 import 'quiz/view/quiz_page.dart';
@@ -47,6 +48,12 @@ GoRouter createRouter() {
           );
         },
       ),
+      // AI 문제 생성 옵션 — 풀스크린 push.
+      GoRoute(
+        path: Routes.aiGen,
+        parentNavigatorKey: shellKey,
+        builder: (_, _) => const AiGenPage(),
+      ),
       // 풀스크린(탭바 없음) — 상위 네비게이터에 push.
       GoRoute(
         path: Routes.quiz,
@@ -84,6 +91,7 @@ abstract final class Routes {
   static const set = '/set';
   static const quiz = '/quiz';
   static const exam = '/exam';
+  static const aiGen = '/ai-gen';
   static const settings = '/settings';
 
   /// 세트(문제집) 모드 선택 링크.

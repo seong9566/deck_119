@@ -120,6 +120,8 @@ class HomePage extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.md),
+                _AiGenEntry(onTap: () => context.push(Routes.aiGen)),
                 _SectionLabel('내 진척'),
                 _ProgressCard(
                   stats: stats,
@@ -336,6 +338,56 @@ class _QuickTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style: AppText.caption.copyWith(color: c.textSecondary)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// AI 문제 생성 진입(홈). 년도별 기출 기반 생성 → 참고용.
+class _AiGenEntry extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AiGenEntry({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.brandTint,
+      borderRadius: appTileRadius,
+      child: InkWell(
+        borderRadius: appTileRadius,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: appTileRadius,
+            border: Border.all(color: c.brand),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome, color: c.brand, size: 24),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('AI 문제 생성',
+                          style: AppText.choice.copyWith(
+                              color: c.textPrimary,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text('년도별 기출 기반 · 참고용',
+                          style: AppText.caption
+                              .copyWith(color: c.brandInk)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: c.brand),
               ],
             ),
           ),
