@@ -1307,6 +1307,652 @@ class SettingsCompanion extends UpdateCompanion<Setting> {
   }
 }
 
+class $GeneratedQuestionsTable extends GeneratedQuestions
+    with TableInfo<$GeneratedQuestionsTable, GeneratedQuestion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GeneratedQuestionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
+    'createdAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMs = GeneratedColumn<int>(
+    'created_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, subjectId, payload, createdAtMs];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'generated_questions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GeneratedQuestion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created_at_ms')) {
+      context.handle(
+        _createdAtMsMeta,
+        createdAtMs.isAcceptableOrUnknown(
+          data['created_at_ms']!,
+          _createdAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GeneratedQuestion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GeneratedQuestion(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      createdAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_ms'],
+      )!,
+    );
+  }
+
+  @override
+  $GeneratedQuestionsTable createAlias(String alias) {
+    return $GeneratedQuestionsTable(attachedDatabase, alias);
+  }
+}
+
+class GeneratedQuestion extends DataClass
+    implements Insertable<GeneratedQuestion> {
+  /// 합성 id(`ai-<us>-<i>`). 유일.
+  final String id;
+  final String subjectId;
+
+  /// Question 전체를 직렬화한 JSON(QuestionDto.fromJson으로 복원).
+  final String payload;
+  final int createdAtMs;
+  const GeneratedQuestion({
+    required this.id,
+    required this.subjectId,
+    required this.payload,
+    required this.createdAtMs,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['payload'] = Variable<String>(payload);
+    map['created_at_ms'] = Variable<int>(createdAtMs);
+    return map;
+  }
+
+  GeneratedQuestionsCompanion toCompanion(bool nullToAbsent) {
+    return GeneratedQuestionsCompanion(
+      id: Value(id),
+      subjectId: Value(subjectId),
+      payload: Value(payload),
+      createdAtMs: Value(createdAtMs),
+    );
+  }
+
+  factory GeneratedQuestion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GeneratedQuestion(
+      id: serializer.fromJson<String>(json['id']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'payload': serializer.toJson<String>(payload),
+      'createdAtMs': serializer.toJson<int>(createdAtMs),
+    };
+  }
+
+  GeneratedQuestion copyWith({
+    String? id,
+    String? subjectId,
+    String? payload,
+    int? createdAtMs,
+  }) => GeneratedQuestion(
+    id: id ?? this.id,
+    subjectId: subjectId ?? this.subjectId,
+    payload: payload ?? this.payload,
+    createdAtMs: createdAtMs ?? this.createdAtMs,
+  );
+  GeneratedQuestion copyWithCompanion(GeneratedQuestionsCompanion data) {
+    return GeneratedQuestion(
+      id: data.id.present ? data.id.value : this.id,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAtMs: data.createdAtMs.present
+          ? data.createdAtMs.value
+          : this.createdAtMs,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GeneratedQuestion(')
+          ..write('id: $id, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('payload: $payload, ')
+          ..write('createdAtMs: $createdAtMs')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, subjectId, payload, createdAtMs);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GeneratedQuestion &&
+          other.id == this.id &&
+          other.subjectId == this.subjectId &&
+          other.payload == this.payload &&
+          other.createdAtMs == this.createdAtMs);
+}
+
+class GeneratedQuestionsCompanion extends UpdateCompanion<GeneratedQuestion> {
+  final Value<String> id;
+  final Value<String> subjectId;
+  final Value<String> payload;
+  final Value<int> createdAtMs;
+  final Value<int> rowid;
+  const GeneratedQuestionsCompanion({
+    this.id = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAtMs = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GeneratedQuestionsCompanion.insert({
+    required String id,
+    required String subjectId,
+    required String payload,
+    required int createdAtMs,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       subjectId = Value(subjectId),
+       payload = Value(payload),
+       createdAtMs = Value(createdAtMs);
+  static Insertable<GeneratedQuestion> custom({
+    Expression<String>? id,
+    Expression<String>? subjectId,
+    Expression<String>? payload,
+    Expression<int>? createdAtMs,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (payload != null) 'payload': payload,
+      if (createdAtMs != null) 'created_at_ms': createdAtMs,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GeneratedQuestionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? subjectId,
+    Value<String>? payload,
+    Value<int>? createdAtMs,
+    Value<int>? rowid,
+  }) {
+    return GeneratedQuestionsCompanion(
+      id: id ?? this.id,
+      subjectId: subjectId ?? this.subjectId,
+      payload: payload ?? this.payload,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAtMs.present) {
+      map['created_at_ms'] = Variable<int>(createdAtMs.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GeneratedQuestionsCompanion(')
+          ..write('id: $id, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('payload: $payload, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PendingAiRequestsTable extends PendingAiRequests
+    with TableInfo<$PendingAiRequestsTable, PendingAiRequest> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingAiRequestsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _docIdMeta = const VerificationMeta('docId');
+  @override
+  late final GeneratedColumn<String> docId = GeneratedColumn<String>(
+    'doc_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _yearScopeMeta = const VerificationMeta(
+    'yearScope',
+  );
+  @override
+  late final GeneratedColumn<String> yearScope = GeneratedColumn<String>(
+    'year_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMsMeta = const VerificationMeta(
+    'createdAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMs = GeneratedColumn<int>(
+    'created_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    docId,
+    subjectId,
+    yearScope,
+    createdAtMs,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_ai_requests';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingAiRequest> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('doc_id')) {
+      context.handle(
+        _docIdMeta,
+        docId.isAcceptableOrUnknown(data['doc_id']!, _docIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_docIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('year_scope')) {
+      context.handle(
+        _yearScopeMeta,
+        yearScope.isAcceptableOrUnknown(data['year_scope']!, _yearScopeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yearScopeMeta);
+    }
+    if (data.containsKey('created_at_ms')) {
+      context.handle(
+        _createdAtMsMeta,
+        createdAtMs.isAcceptableOrUnknown(
+          data['created_at_ms']!,
+          _createdAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {docId};
+  @override
+  PendingAiRequest map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingAiRequest(
+      docId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}doc_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      yearScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}year_scope'],
+      )!,
+      createdAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_ms'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingAiRequestsTable createAlias(String alias) {
+    return $PendingAiRequestsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingAiRequest extends DataClass
+    implements Insertable<PendingAiRequest> {
+  /// Firestore gen_requests doc id.
+  final String docId;
+  final String subjectId;
+
+  /// 회수 시 year 매핑에 필요("2025"|"2026"|"all").
+  final String yearScope;
+  final int createdAtMs;
+  const PendingAiRequest({
+    required this.docId,
+    required this.subjectId,
+    required this.yearScope,
+    required this.createdAtMs,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['doc_id'] = Variable<String>(docId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['year_scope'] = Variable<String>(yearScope);
+    map['created_at_ms'] = Variable<int>(createdAtMs);
+    return map;
+  }
+
+  PendingAiRequestsCompanion toCompanion(bool nullToAbsent) {
+    return PendingAiRequestsCompanion(
+      docId: Value(docId),
+      subjectId: Value(subjectId),
+      yearScope: Value(yearScope),
+      createdAtMs: Value(createdAtMs),
+    );
+  }
+
+  factory PendingAiRequest.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingAiRequest(
+      docId: serializer.fromJson<String>(json['docId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      yearScope: serializer.fromJson<String>(json['yearScope']),
+      createdAtMs: serializer.fromJson<int>(json['createdAtMs']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'docId': serializer.toJson<String>(docId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'yearScope': serializer.toJson<String>(yearScope),
+      'createdAtMs': serializer.toJson<int>(createdAtMs),
+    };
+  }
+
+  PendingAiRequest copyWith({
+    String? docId,
+    String? subjectId,
+    String? yearScope,
+    int? createdAtMs,
+  }) => PendingAiRequest(
+    docId: docId ?? this.docId,
+    subjectId: subjectId ?? this.subjectId,
+    yearScope: yearScope ?? this.yearScope,
+    createdAtMs: createdAtMs ?? this.createdAtMs,
+  );
+  PendingAiRequest copyWithCompanion(PendingAiRequestsCompanion data) {
+    return PendingAiRequest(
+      docId: data.docId.present ? data.docId.value : this.docId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      yearScope: data.yearScope.present ? data.yearScope.value : this.yearScope,
+      createdAtMs: data.createdAtMs.present
+          ? data.createdAtMs.value
+          : this.createdAtMs,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingAiRequest(')
+          ..write('docId: $docId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('yearScope: $yearScope, ')
+          ..write('createdAtMs: $createdAtMs')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(docId, subjectId, yearScope, createdAtMs);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingAiRequest &&
+          other.docId == this.docId &&
+          other.subjectId == this.subjectId &&
+          other.yearScope == this.yearScope &&
+          other.createdAtMs == this.createdAtMs);
+}
+
+class PendingAiRequestsCompanion extends UpdateCompanion<PendingAiRequest> {
+  final Value<String> docId;
+  final Value<String> subjectId;
+  final Value<String> yearScope;
+  final Value<int> createdAtMs;
+  final Value<int> rowid;
+  const PendingAiRequestsCompanion({
+    this.docId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.yearScope = const Value.absent(),
+    this.createdAtMs = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingAiRequestsCompanion.insert({
+    required String docId,
+    required String subjectId,
+    required String yearScope,
+    required int createdAtMs,
+    this.rowid = const Value.absent(),
+  }) : docId = Value(docId),
+       subjectId = Value(subjectId),
+       yearScope = Value(yearScope),
+       createdAtMs = Value(createdAtMs);
+  static Insertable<PendingAiRequest> custom({
+    Expression<String>? docId,
+    Expression<String>? subjectId,
+    Expression<String>? yearScope,
+    Expression<int>? createdAtMs,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (docId != null) 'doc_id': docId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (yearScope != null) 'year_scope': yearScope,
+      if (createdAtMs != null) 'created_at_ms': createdAtMs,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingAiRequestsCompanion copyWith({
+    Value<String>? docId,
+    Value<String>? subjectId,
+    Value<String>? yearScope,
+    Value<int>? createdAtMs,
+    Value<int>? rowid,
+  }) {
+    return PendingAiRequestsCompanion(
+      docId: docId ?? this.docId,
+      subjectId: subjectId ?? this.subjectId,
+      yearScope: yearScope ?? this.yearScope,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (docId.present) {
+      map['doc_id'] = Variable<String>(docId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (yearScope.present) {
+      map['year_scope'] = Variable<String>(yearScope.value);
+    }
+    if (createdAtMs.present) {
+      map['created_at_ms'] = Variable<int>(createdAtMs.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingAiRequestsCompanion(')
+          ..write('docId: $docId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('yearScope: $yearScope, ')
+          ..write('createdAtMs: $createdAtMs, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1314,6 +1960,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WrongEntriesTable wrongEntries = $WrongEntriesTable(this);
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
+  late final $GeneratedQuestionsTable generatedQuestions =
+      $GeneratedQuestionsTable(this);
+  late final $PendingAiRequestsTable pendingAiRequests =
+      $PendingAiRequestsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1323,6 +1973,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     wrongEntries,
     sessions,
     settings,
+    generatedQuestions,
+    pendingAiRequests,
   ];
 }
 
@@ -2045,6 +2697,398 @@ typedef $$SettingsTableProcessedTableManager =
       Setting,
       PrefetchHooks Function()
     >;
+typedef $$GeneratedQuestionsTableCreateCompanionBuilder =
+    GeneratedQuestionsCompanion Function({
+      required String id,
+      required String subjectId,
+      required String payload,
+      required int createdAtMs,
+      Value<int> rowid,
+    });
+typedef $$GeneratedQuestionsTableUpdateCompanionBuilder =
+    GeneratedQuestionsCompanion Function({
+      Value<String> id,
+      Value<String> subjectId,
+      Value<String> payload,
+      Value<int> createdAtMs,
+      Value<int> rowid,
+    });
+
+class $$GeneratedQuestionsTableFilterComposer
+    extends Composer<_$AppDatabase, $GeneratedQuestionsTable> {
+  $$GeneratedQuestionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GeneratedQuestionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GeneratedQuestionsTable> {
+  $$GeneratedQuestionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GeneratedQuestionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GeneratedQuestionsTable> {
+  $$GeneratedQuestionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => column,
+  );
+}
+
+class $$GeneratedQuestionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GeneratedQuestionsTable,
+          GeneratedQuestion,
+          $$GeneratedQuestionsTableFilterComposer,
+          $$GeneratedQuestionsTableOrderingComposer,
+          $$GeneratedQuestionsTableAnnotationComposer,
+          $$GeneratedQuestionsTableCreateCompanionBuilder,
+          $$GeneratedQuestionsTableUpdateCompanionBuilder,
+          (
+            GeneratedQuestion,
+            BaseReferences<
+              _$AppDatabase,
+              $GeneratedQuestionsTable,
+              GeneratedQuestion
+            >,
+          ),
+          GeneratedQuestion,
+          PrefetchHooks Function()
+        > {
+  $$GeneratedQuestionsTableTableManager(
+    _$AppDatabase db,
+    $GeneratedQuestionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GeneratedQuestionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GeneratedQuestionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GeneratedQuestionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> createdAtMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GeneratedQuestionsCompanion(
+                id: id,
+                subjectId: subjectId,
+                payload: payload,
+                createdAtMs: createdAtMs,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String subjectId,
+                required String payload,
+                required int createdAtMs,
+                Value<int> rowid = const Value.absent(),
+              }) => GeneratedQuestionsCompanion.insert(
+                id: id,
+                subjectId: subjectId,
+                payload: payload,
+                createdAtMs: createdAtMs,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GeneratedQuestionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GeneratedQuestionsTable,
+      GeneratedQuestion,
+      $$GeneratedQuestionsTableFilterComposer,
+      $$GeneratedQuestionsTableOrderingComposer,
+      $$GeneratedQuestionsTableAnnotationComposer,
+      $$GeneratedQuestionsTableCreateCompanionBuilder,
+      $$GeneratedQuestionsTableUpdateCompanionBuilder,
+      (
+        GeneratedQuestion,
+        BaseReferences<
+          _$AppDatabase,
+          $GeneratedQuestionsTable,
+          GeneratedQuestion
+        >,
+      ),
+      GeneratedQuestion,
+      PrefetchHooks Function()
+    >;
+typedef $$PendingAiRequestsTableCreateCompanionBuilder =
+    PendingAiRequestsCompanion Function({
+      required String docId,
+      required String subjectId,
+      required String yearScope,
+      required int createdAtMs,
+      Value<int> rowid,
+    });
+typedef $$PendingAiRequestsTableUpdateCompanionBuilder =
+    PendingAiRequestsCompanion Function({
+      Value<String> docId,
+      Value<String> subjectId,
+      Value<String> yearScope,
+      Value<int> createdAtMs,
+      Value<int> rowid,
+    });
+
+class $$PendingAiRequestsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingAiRequestsTable> {
+  $$PendingAiRequestsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get docId => $composableBuilder(
+    column: $table.docId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get yearScope => $composableBuilder(
+    column: $table.yearScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingAiRequestsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingAiRequestsTable> {
+  $$PendingAiRequestsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get docId => $composableBuilder(
+    column: $table.docId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get yearScope => $composableBuilder(
+    column: $table.yearScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingAiRequestsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingAiRequestsTable> {
+  $$PendingAiRequestsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get docId =>
+      $composableBuilder(column: $table.docId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get yearScope =>
+      $composableBuilder(column: $table.yearScope, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMs => $composableBuilder(
+    column: $table.createdAtMs,
+    builder: (column) => column,
+  );
+}
+
+class $$PendingAiRequestsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingAiRequestsTable,
+          PendingAiRequest,
+          $$PendingAiRequestsTableFilterComposer,
+          $$PendingAiRequestsTableOrderingComposer,
+          $$PendingAiRequestsTableAnnotationComposer,
+          $$PendingAiRequestsTableCreateCompanionBuilder,
+          $$PendingAiRequestsTableUpdateCompanionBuilder,
+          (
+            PendingAiRequest,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingAiRequestsTable,
+              PendingAiRequest
+            >,
+          ),
+          PendingAiRequest,
+          PrefetchHooks Function()
+        > {
+  $$PendingAiRequestsTableTableManager(
+    _$AppDatabase db,
+    $PendingAiRequestsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingAiRequestsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingAiRequestsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingAiRequestsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> docId = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<String> yearScope = const Value.absent(),
+                Value<int> createdAtMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingAiRequestsCompanion(
+                docId: docId,
+                subjectId: subjectId,
+                yearScope: yearScope,
+                createdAtMs: createdAtMs,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String docId,
+                required String subjectId,
+                required String yearScope,
+                required int createdAtMs,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingAiRequestsCompanion.insert(
+                docId: docId,
+                subjectId: subjectId,
+                yearScope: yearScope,
+                createdAtMs: createdAtMs,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingAiRequestsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingAiRequestsTable,
+      PendingAiRequest,
+      $$PendingAiRequestsTableFilterComposer,
+      $$PendingAiRequestsTableOrderingComposer,
+      $$PendingAiRequestsTableAnnotationComposer,
+      $$PendingAiRequestsTableCreateCompanionBuilder,
+      $$PendingAiRequestsTableUpdateCompanionBuilder,
+      (
+        PendingAiRequest,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingAiRequestsTable,
+          PendingAiRequest
+        >,
+      ),
+      PendingAiRequest,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2057,4 +3101,8 @@ class $AppDatabaseManager {
       $$SessionsTableTableManager(_db, _db.sessions);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$GeneratedQuestionsTableTableManager get generatedQuestions =>
+      $$GeneratedQuestionsTableTableManager(_db, _db.generatedQuestions);
+  $$PendingAiRequestsTableTableManager get pendingAiRequests =>
+      $$PendingAiRequestsTableTableManager(_db, _db.pendingAiRequests);
 }

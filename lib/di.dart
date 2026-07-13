@@ -9,13 +9,17 @@ import 'data/datasources/content_data_source.dart';
 import 'data/repositories/ai_question_repository_impl.dart';
 import 'domain/repositories/ai_question_repository.dart';
 import 'data/datasources/local/app_database.dart';
+import 'data/datasources/local/drift_generated_data_source.dart';
+import 'data/datasources/local/drift_pending_ai_data_source.dart';
 import 'data/datasources/local/drift_progress_data_source.dart';
 import 'data/datasources/local/drift_session_data_source.dart';
 import 'data/datasources/local/drift_settings_data_source.dart';
+import 'data/repositories/generated_question_repository_impl.dart';
 import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/question_repository_impl.dart';
 import 'data/repositories/session_repository_impl.dart';
 import 'data/repositories/settings_repository_impl.dart';
+import 'domain/repositories/generated_question_repository.dart';
 import 'domain/repositories/progress_repository.dart';
 import 'domain/repositories/question_repository.dart';
 import 'domain/repositories/session_repository.dart';
@@ -47,6 +51,10 @@ final _sessionDataSourceProvider =
     Provider((ref) => DriftSessionDataSource(ref.watch(appDatabaseProvider)));
 final _settingsDataSourceProvider =
     Provider((ref) => DriftSettingsDataSource(ref.watch(appDatabaseProvider)));
+final _generatedDataSourceProvider =
+    Provider((ref) => DriftGeneratedDataSource(ref.watch(appDatabaseProvider)));
+final _pendingAiDataSourceProvider =
+    Provider((ref) => DriftPendingAiDataSource(ref.watch(appDatabaseProvider)));
 
 // Repository (port ← impl)
 final questionRepositoryProvider = Provider<QuestionRepository>(
@@ -64,13 +72,23 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 
 /// AI 문제 생성 저장소(Firestore 큐 중계 → 맥북 워커가 CLI로 생성).
 /// 기본 `(default)`가 아니라 명명된 DB(`deck-119-db`)를 사용.
+/// 10문항 생성은 오래 걸려 대기 상한을 240초로 둔다(초과분은 회수 안전망으로 흡수).
 final aiQuestionRepositoryProvider = Provider<AiQuestionRepository>(
   (ref) => AiQuestionRepositoryImpl(
     FirebaseFirestore.instanceFor(
       app: Firebase.app(),
       databaseId: 'deck-119-db',
     ),
+    ref.watch(_pendingAiDataSourceProvider),
+    timeout: const Duration(seconds: 240),
   ),
+);
+
+/// AI 생성 문항 적립함(로컬 Drift 누적 보관 → 재풀이 제공).
+final generatedQuestionRepositoryProvider =
+    Provider<GeneratedQuestionRepository>(
+  (ref) =>
+      GeneratedQuestionRepositoryImpl(ref.watch(_generatedDataSourceProvider)),
 );
 
 // UseCase

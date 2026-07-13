@@ -11,6 +11,11 @@ abstract interface class AiQuestionRepository {
     required int count,
     required String type,
   });
+
+  /// 회수 안전망: 타임아웃 등으로 앱이 못 받았던 대기 요청 중 done된 것을 매핑해
+  /// 반환한다(대기목록에서 정리). 미완(pending/processing)은 유지, 실패는 폐기.
+  /// 반환된 문항은 호출측이 적립함에 저장한다.
+  Future<List<Question>> recoverCompleted();
 }
 
 /// 생성 실패(네트워크·한도 초과·서버 오류)를 UI가 구분해 표시하기 위한 예외.

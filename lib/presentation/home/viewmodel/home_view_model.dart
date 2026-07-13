@@ -69,6 +69,23 @@ final wrongCountProvider = FutureProvider.autoDispose<int>((ref) async {
   return ids.length;
 });
 
+/// AI 문제함 누적 개수(실시간). 0이면 홈 진입점을 숨긴다.
+/// subjectId는 AI 생성 과목(fire-law) 고정.
+final aiBankCountProvider = StreamProvider.autoDispose<int>((ref) {
+  return ref.watch(generatedQuestionRepositoryProvider).watchCount('fire-law');
+});
+
+/// 회수 안전망: 홈 진입 시 타임아웃으로 못 받았던 완료분을 적립함에 흡수한다.
+/// 반환=이번에 회수된 문항 수. 저장하면 aiBankCountProvider가 자동 갱신된다.
+final aiRecoveryProvider = FutureProvider.autoDispose<int>((ref) async {
+  final recovered =
+      await ref.watch(aiQuestionRepositoryProvider).recoverCompleted();
+  if (recovered.isNotEmpty) {
+    await ref.watch(generatedQuestionRepositoryProvider).save(recovered);
+  }
+  return recovered.length;
+});
+
 /// 홈 "이어풀기" 카드(가장 최근 세션 → 표시용 세트 정보). 없으면 null.
 class RecentSessionCard {
   final String collectionId;

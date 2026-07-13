@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../di.dart';
 import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../ai_gen/viewmodel/ai_gen_view_model.dart';
 import '../../app_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
@@ -38,6 +40,16 @@ class HomePage extends ConsumerWidget {
     _refresh(ref, subjectId);
   }
 
+  /// AI 문제함 재풀이 — 누적 문항을 DB에서 로드해 핸드오프 홀더에 주입 후 ai 모드로.
+  Future<void> _openAiBank(BuildContext context, WidgetRef ref) async {
+    const subjectId = 'fire-law';
+    final questions =
+        await ref.read(generatedQuestionRepositoryProvider).getAll(subjectId);
+    if (questions.isEmpty || !context.mounted) return;
+    ref.read(generatedQuestionsProvider.notifier).state = questions;
+    await context.push(Routes.quizLink(subjectId, QuizMode.ai));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
@@ -67,6 +79,9 @@ class HomePage extends ConsumerWidget {
             final stats =
                 ref.watch(progressStatsProvider).valueOrNull ?? ProgressStats.empty;
             final wrongCount = ref.watch(wrongCountProvider).valueOrNull ?? 0;
+            final aiBankCount = ref.watch(aiBankCountProvider).valueOrNull ?? 0;
+            // 홈 진입 시 회수 안전망 실행(타임아웃으로 못 받았던 완료분 흡수).
+            ref.watch(aiRecoveryProvider);
             final recent = ref.watch(recentSessionCardProvider).valueOrNull;
 
             return ListView(
@@ -122,6 +137,13 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _AiGenEntry(onTap: () => context.push(Routes.aiGen)),
+                if (aiBankCount > 0) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  _AiBankEntry(
+                    count: aiBankCount,
+                    onTap: () => _openAiBank(context, ref),
+                  ),
+                ],
                 _SectionLabel('내 진척'),
                 _ProgressCard(
                   stats: stats,
@@ -388,6 +410,58 @@ class _AiGenEntry extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.chevron_right, color: c.brand),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// AI 문제함 진입(홈) — 적립된 AI 문항 누적 재풀이. 1개 이상일 때만 노출.
+class _AiBankEntry extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+  const _AiBankEntry({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.surface,
+      borderRadius: appTileRadius,
+      child: InkWell(
+        borderRadius: appTileRadius,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: appTileRadius,
+            border: Border.all(color: c.outline),
+            boxShadow: appCardShadow(c),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Icon(Icons.inventory_2_outlined, color: c.brand, size: 24),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('AI 문제함',
+                          style: AppText.choice.copyWith(
+                              color: c.textPrimary,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text('누적 $count문항 · 참고용',
+                          style: AppText.caption
+                              .copyWith(color: c.textSecondary)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: c.textTertiary),
               ],
             ),
           ),

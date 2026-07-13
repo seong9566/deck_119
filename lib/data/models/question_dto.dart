@@ -19,7 +19,32 @@ class QuestionDto {
               ?.map((e) => _verdictFromJson(e as Map<String, dynamic>))
               .toList() ??
           const <StatementVerdict>[],
+      // 번들 JSON엔 source가 없어 기본 bundled. AI 적립분만 'ai'로 복원된다.
+      source: (json['source'] as String?) == 'ai'
+          ? QuestionSource.ai
+          : QuestionSource.bundled,
     );
+  }
+
+  /// Domain → 저장 JSON. AI 생성 문항 적립함(payload) 직렬화에 쓰인다.
+  static Map<String, dynamic> toJson(Question q) {
+    return {
+      'id': q.id,
+      'subjectId': q.subjectId,
+      'type': q.type == QuestionType.ox ? 'ox' : 'mcq',
+      'year': q.year,
+      'stem': q.stem,
+      'choices': q.choices,
+      'answerIndex': q.answerIndex,
+      'explanation': q.explanation,
+      'difficulty': q.difficulty,
+      'tags': q.tags,
+      'breakdown': [
+        for (final b in q.breakdown)
+          {'label': b.label, 'correct': b.correct, 'note': b.note},
+      ],
+      'source': q.source == QuestionSource.ai ? 'ai' : 'bundled',
+    };
   }
 
   static StatementVerdict _verdictFromJson(Map<String, dynamic> json) {

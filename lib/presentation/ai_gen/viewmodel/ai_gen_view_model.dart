@@ -34,6 +34,10 @@ class AiGenViewModel extends AutoDisposeAsyncNotifier<List<Question>?> {
             count: options.count,
             type: options.type,
           );
+      // 생성분을 적립함에 누적 저장(참고용). 재풀이는 여기서 로드된다.
+      if (questions.isNotEmpty) {
+        await ref.read(generatedQuestionRepositoryProvider).save(questions);
+      }
       ref.read(generatedQuestionsProvider.notifier).state = questions;
       return questions;
     });

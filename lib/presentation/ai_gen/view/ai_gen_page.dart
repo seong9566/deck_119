@@ -24,8 +24,8 @@ class AiGenPage extends ConsumerStatefulWidget {
 }
 
 class _AiGenPageState extends ConsumerState<AiGenPage> {
+  static const _count = 10; // 한 번에 10문항 고정
   String _year = 'all'; // "2025" | "2026" | "all"
-  int _count = 3;
   String _type = 'mcq'; // "mcq" | "ox" | "mixed"
 
   void _onResult(AsyncValue<List<Question>?> next) {
@@ -116,13 +116,6 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
                     selected: _type,
                     onSelect: (v) => setState(() => _type = v),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _OptionGroup(
-                    label: '문항 수',
-                    options: const [('3', '3문항'), ('5', '5문항')],
-                    selected: '$_count',
-                    onSelect: (v) => setState(() => _count = int.parse(v)),
-                  ),
                 ],
               ),
             ),
@@ -138,7 +131,7 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
                       AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
                   child: loading
                       ? _GeneratingButton(color: c.brand)
-                      : PrimaryButton(label: 'AI로 문제 만들기', onPressed: _generate),
+                      : PrimaryButton(label: 'AI로 10문제 만들기', onPressed: _generate),
                 ),
               ),
             ),

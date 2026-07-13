@@ -50,7 +50,44 @@ class Settings extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [AttemptRecords, WrongEntries, Sessions, Settings])
+/// AI 생성 문항 적립함(참고용). 번들에 없는 합성 문항이라 내용 전체를
+/// [payload](Question JSON)로 보관한다. 생성할 때마다 append돼 누적된다.
+class GeneratedQuestions extends Table {
+  /// 합성 id(`ai-<us>-<i>`). 유일.
+  TextColumn get id => text()();
+  TextColumn get subjectId => text()();
+
+  /// Question 전체를 직렬화한 JSON(QuestionDto.fromJson으로 복원).
+  TextColumn get payload => text()();
+  IntColumn get createdAtMs => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// 회수 대기 중인 생성 요청(타임아웃 안전망). 앱이 만든 gen_requests doc id를
+/// 보관했다가, 홈 진입 시 done된 것을 회수해 적립함에 넣는다.
+class PendingAiRequests extends Table {
+  /// Firestore gen_requests doc id.
+  TextColumn get docId => text()();
+  TextColumn get subjectId => text()();
+
+  /// 회수 시 year 매핑에 필요("2025"|"2026"|"all").
+  TextColumn get yearScope => text()();
+  IntColumn get createdAtMs => integer()();
+
+  @override
+  Set<Column> get primaryKey => {docId};
+}
+
+@DriftDatabase(tables: [
+  AttemptRecords,
+  WrongEntries,
+  Sessions,
+  Settings,
+  GeneratedQuestions,
+  PendingAiRequests,
+])
 class AppDatabase extends _$AppDatabase {
   /// 앱 실행용(문서 디렉터리에 deck119.sqlite).
   AppDatabase() : super(driftDatabase(name: 'deck119'));
@@ -59,5 +96,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v2: AI 생성 문항 적립함 추가.
+          if (from < 2) await m.createTable(generatedQuestions);
+          // v3: 회수 대기 요청 테이블 추가.
+          if (from < 3) await m.createTable(pendingAiRequests);
+        },
+      );
 }
