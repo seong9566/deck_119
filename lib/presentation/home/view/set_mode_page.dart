@@ -54,7 +54,8 @@ class SetModePage extends ConsumerWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
+        child: ResponsiveBody(
+          child: ListView(
           padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.huge),
           children: [
@@ -95,6 +96,7 @@ class SetModePage extends ConsumerWidget {
               },
             ),
           ],
+        ),
         ),
       ),
     );
