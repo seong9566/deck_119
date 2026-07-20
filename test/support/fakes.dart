@@ -1,7 +1,7 @@
 import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/progress_stats.dart';
 import 'package:deck_119/domain/entities/question.dart';
-import 'package:deck_119/domain/entities/question_collection.dart';
+import 'package:deck_119/domain/entities/question_category.dart';
 import 'package:deck_119/domain/entities/recent_session.dart';
 import 'package:deck_119/domain/entities/subject.dart';
 import 'package:deck_119/domain/repositories/progress_repository.dart';
@@ -19,8 +19,8 @@ class FakeQuestionRepository implements QuestionRepository {
       const [Subject(id: 's1', name: '테스트과목')];
 
   @override
-  Future<List<QuestionCollection>> getCollections() async => [
-        QuestionCollection(
+  Future<List<QuestionCategory>> getCategories() async => [
+        QuestionCategory(
             id: 's1', name: '전체', group: '전체', count: questions.length),
       ];
 

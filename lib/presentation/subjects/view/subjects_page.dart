@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../domain/entities/question_collection.dart';
+import '../../../domain/entities/question_category.dart';
 import '../../app_router.dart';
 import '../../home/viewmodel/home_view_model.dart';
 import '../../shared/theme/app_colors.dart';
@@ -23,7 +23,7 @@ class SubjectsPage extends ConsumerWidget {
     final subjects = ref.watch(homeViewModelProvider).valueOrNull;
     final subjectName =
         (subjects != null && subjects.isNotEmpty) ? subjects.first.name : null;
-    final async = ref.watch(collectionsProvider);
+    final async = ref.watch(categoriesProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -97,7 +97,7 @@ class _SectionLabel extends StatelessWidget {
 /// [_CollectionRow]가 자체 하단 여백(md)을 가지므로 세로 간격은 그대로,
 /// 2열에서는 [Row]+[Expanded]로 가로 균등 배치하고 사이에 md 간격을 준다.
 class _CollectionGrid extends StatelessWidget {
-  final List<QuestionCollection> cols;
+  final List<QuestionCategory> cols;
   final bool twoColumn;
   const _CollectionGrid({required this.cols, required this.twoColumn});
 
@@ -129,7 +129,7 @@ class _CollectionGrid extends StatelessWidget {
 }
 
 class _CollectionRow extends StatelessWidget {
-  final QuestionCollection col;
+  final QuestionCategory col;
   const _CollectionRow({required this.col});
 
   @override

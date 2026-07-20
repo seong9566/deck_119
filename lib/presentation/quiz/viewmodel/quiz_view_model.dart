@@ -6,7 +6,7 @@ import '../../ai_gen/viewmodel/ai_gen_view_model.dart';
 import 'quiz_state.dart';
 
 /// 풀이 세션 인자(과목 + 모드 + 이어풀기 여부). 레코드 값 동등성으로 family 키.
-typedef QuizArgs = ({String subjectId, QuizMode mode, bool resume});
+typedef QuizArgs = ({String categoryId, QuizMode mode, bool resume});
 
 final quizViewModelProvider = AsyncNotifierProvider.autoDispose
     .family<QuizViewModel, QuizState, QuizArgs>(QuizViewModel.new);
@@ -19,12 +19,12 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     // ai 모드는 런타임 생성 세트를 핸드오프 홀더에서 주입(저장소 로드 아님).
     final questions = arg.mode == QuizMode.ai
         ? ref.read(generatedQuestionsProvider)
-        : await ref.watch(getQuestionSetProvider)(arg.subjectId, arg.mode);
+        : await ref.watch(getQuestionSetProvider)(arg.categoryId, arg.mode);
 
     var startIndex = 0;
     var answers = List<int?>.filled(questions.length, null);
     if (arg.mode == QuizMode.normal && arg.resume) {
-      final info = await ref.watch(getResumeInfoProvider)(arg.subjectId);
+      final info = await ref.watch(getResumeInfoProvider)(arg.categoryId);
       if (info != null && info.lastIndex < questions.length) {
         startIndex = info.lastIndex;
         // 이전 세션의 선택을 복원(길이 방어) → 되돌아가면 답·해설이 되살아난다.
@@ -109,13 +109,13 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
 
   void _saveSessionIfNormal(int index, List<int?> answers) {
     if (arg.mode == QuizMode.normal) {
-      ref.read(saveSessionPositionProvider)(arg.subjectId, index, answers);
+      ref.read(saveSessionPositionProvider)(arg.categoryId, index, answers);
     }
   }
 
   void _clearSessionIfNormal() {
     if (arg.mode == QuizMode.normal) {
-      ref.read(clearSessionProvider)(arg.subjectId);
+      ref.read(clearSessionProvider)(arg.categoryId);
     }
   }
 }

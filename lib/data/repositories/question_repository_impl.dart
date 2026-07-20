@@ -1,5 +1,5 @@
 import '../../domain/entities/question.dart';
-import '../../domain/entities/question_collection.dart';
+import '../../domain/entities/question_category.dart';
 import '../../domain/entities/subject.dart';
 import '../../domain/repositories/question_repository.dart';
 import '../datasources/content_data_source.dart';
@@ -40,7 +40,7 @@ class QuestionRepositoryImpl implements QuestionRepository {
   }
 
   @override
-  Future<List<QuestionCollection>> getCollections() async {
+  Future<List<QuestionCategory>> getCategories() async {
     final bundle = await _bundle();
     final subj = bundle.subject.id;
     final qs = bundle.questions.where((q) => q.subjectId == subj).toList();
@@ -61,23 +61,23 @@ class QuestionRepositoryImpl implements QuestionRepository {
             : int.parse(ma[2]!).compareTo(int.parse(mb[2]!));
       });
 
-    final result = <QuestionCollection>[];
+    final result = <QuestionCategory>[];
     for (final t in sorted) {
       final m = _roundTag.firstMatch(t)!;
-      result.add(QuestionCollection(
+      result.add(QuestionCategory(
         id: '$subj$_sep$t',
         name: '${m[1]} ${m[2]}회',
         group: '원형',
         count: qs.where((q) => q.tags.contains(t)).length,
       ));
     }
-    result.add(QuestionCollection(
+    result.add(QuestionCategory(
       id: '$subj$_sep심화',
       name: '심화 문제',
       group: '심화',
       count: qs.where((q) => !q.tags.contains(_srcTag)).length,
     ));
-    result.add(QuestionCollection(
+    result.add(QuestionCategory(
       id: subj,
       name: '전체',
       group: '전체',

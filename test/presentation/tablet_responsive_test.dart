@@ -94,7 +94,7 @@ void main() {
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
-            home: const QuizPage(subjectId: 's1', mode: QuizMode.normal),
+            home: const QuizPage(categoryId: 's1', mode: QuizMode.normal),
           ),
         );
 

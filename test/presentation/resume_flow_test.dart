@@ -29,7 +29,7 @@ void main() {
       ],
       child: MaterialApp(
         theme: AppTheme.light(),
-        home: QuizPage(subjectId: 's1', mode: QuizMode.normal, resume: resume),
+        home: QuizPage(categoryId: 's1', mode: QuizMode.normal, resume: resume),
       ),
     );
   }
@@ -78,8 +78,8 @@ void main() {
   });
 
   test('QuizArgs는 resume 값으로 구분된다(family 키)', () {
-    const a = (subjectId: 's1', mode: QuizMode.normal, resume: false);
-    const b = (subjectId: 's1', mode: QuizMode.normal, resume: true);
+    const a = (categoryId: 's1', mode: QuizMode.normal, resume: false);
+    const b = (categoryId: 's1', mode: QuizMode.normal, resume: true);
     expect(a == b, isFalse);
     expect(a, isA<QuizArgs>());
   });

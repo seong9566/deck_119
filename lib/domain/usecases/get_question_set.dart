@@ -10,8 +10,8 @@ class GetQuestionSet {
 
   GetQuestionSet(this._questions, this._progress);
 
-  Future<List<Question>> call(String subjectId, QuizMode mode) async {
-    final all = await _questions.getQuestions(subjectId);
+  Future<List<Question>> call(String categoryId, QuizMode mode) async {
+    final all = await _questions.getQuestions(categoryId);
     switch (mode) {
       case QuizMode.normal:
       case QuizMode.exam:

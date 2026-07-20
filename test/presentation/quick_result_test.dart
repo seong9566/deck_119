@@ -24,7 +24,7 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: QuizPage(subjectId: 's1', mode: mode),
+          home: QuizPage(categoryId: 's1', mode: mode),
         ),
       );
 
