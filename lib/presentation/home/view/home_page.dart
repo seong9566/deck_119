@@ -34,10 +34,10 @@ class HomePage extends ConsumerWidget {
     _refresh(ref, card.collectionId);
   }
 
-  Future<void> _openMode(BuildContext context, WidgetRef ref, String subjectId,
+  Future<void> _openMode(BuildContext context, WidgetRef ref, String categoryId,
       QuizMode mode) async {
-    await context.push(Routes.quizLink(subjectId, mode));
-    _refresh(ref, subjectId);
+    await context.push(Routes.quizLink(categoryId, mode));
+    _refresh(ref, categoryId);
   }
 
   /// AI 문제함 재풀이 — 누적 문항을 DB에서 로드해 핸드오프 홀더에 주입 후 ai 모드로.
@@ -53,7 +53,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
-    final collectionsAsync = ref.watch(collectionsProvider);
+    final collectionsAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -73,7 +73,7 @@ class HomePage extends ConsumerWidget {
               (x) => x.group == '전체',
               orElse: () => collections.last,
             );
-            final subjectId = jeonche.id;
+            final categoryId = jeonche.id;
             final total = jeonche.count;
 
             final stats =
@@ -120,7 +120,7 @@ class HomePage extends ConsumerWidget {
                         title: '빠른 10문제',
                         subtitle: '무작위 10문항',
                         onTap: () => _openMode(
-                            context, ref, subjectId, QuizMode.quick),
+                            context, ref, categoryId, QuizMode.quick),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -131,7 +131,7 @@ class HomePage extends ConsumerWidget {
                         subtitle: wrongCount > 0 ? '$wrongCount문제' : '없음',
                         enabled: wrongCount > 0,
                         onTap: () => _openMode(
-                            context, ref, subjectId, QuizMode.review),
+                            context, ref, categoryId, QuizMode.review),
                       ),
                     ),
                   ],

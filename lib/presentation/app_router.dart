@@ -61,7 +61,7 @@ GoRouter createRouter() {
         builder: (_, state) {
           final p = state.uri.queryParameters;
           return QuizPage(
-            subjectId: p['subjectId']!,
+            categoryId: p['categoryId']!,
             mode: _parseMode(p['mode']),
             resume: p['resume'] == 'true',
           );
@@ -71,7 +71,7 @@ GoRouter createRouter() {
         path: Routes.exam,
         parentNavigatorKey: shellKey,
         builder: (_, state) => QuizPage(
-          subjectId: state.uri.queryParameters['subjectId']!,
+          categoryId: state.uri.queryParameters['categoryId']!,
           mode: QuizMode.exam,
         ),
       ),
@@ -100,10 +100,10 @@ abstract final class Routes {
           .toString();
 
   /// 풀이(normal·random·review) 링크.
-  static String quizLink(String subjectId, QuizMode mode,
+  static String quizLink(String categoryId, QuizMode mode,
       {bool resume = false}) {
     final q = {
-      'subjectId': subjectId,
+      'categoryId': categoryId,
       'mode': mode.name,
       if (resume) 'resume': 'true',
     };
@@ -111,6 +111,6 @@ abstract final class Routes {
   }
 
   /// 시험 링크.
-  static String examLink(String subjectId) =>
-      Uri(path: exam, queryParameters: {'subjectId': subjectId}).toString();
+  static String examLink(String categoryId) =>
+      Uri(path: exam, queryParameters: {'categoryId': categoryId}).toString();
 }

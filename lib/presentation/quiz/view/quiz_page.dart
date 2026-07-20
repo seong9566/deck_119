@@ -13,21 +13,21 @@ import '../viewmodel/quiz_state.dart';
 import '../viewmodel/quiz_view_model.dart';
 
 class QuizPage extends ConsumerWidget {
-  final String subjectId;
+  final String categoryId;
   final QuizMode mode;
 
   /// normal 모드에서 마지막 위치부터 이어풀지 여부.
   final bool resume;
   const QuizPage({
     super.key,
-    required this.subjectId,
+    required this.categoryId,
     required this.mode,
     this.resume = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final args = (subjectId: subjectId, mode: mode, resume: resume);
+    final args = (categoryId: categoryId, mode: mode, resume: resume);
     final async = ref.watch(quizViewModelProvider(args));
 
     return async.when(
@@ -601,4 +601,3 @@ class _PerfectCard extends StatelessWidget {
     );
   }
 }
-

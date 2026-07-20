@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../di.dart';
 import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/question.dart';
-import '../../../domain/entities/question_collection.dart';
+import '../../../domain/entities/question_category.dart';
 import '../../../domain/entities/resume_info.dart';
 import '../../../domain/entities/subject.dart';
 
@@ -18,16 +18,16 @@ class HomeViewModel extends AsyncNotifier<List<Subject>> {
   }
 }
 
-/// 선택 가능한 문제 세트 목록(원형 회차별·심화·전체).
-final collectionsProvider =
-    FutureProvider<List<QuestionCollection>>((ref) async {
-  return ref.watch(questionRepositoryProvider).getCollections();
+/// 선택 가능한 카테고리 목록(법령별·교차법령·심화 OX·계산 + 전체).
+final categoriesProvider =
+    FutureProvider<List<QuestionCategory>>((ref) async {
+  return ref.watch(questionRepositoryProvider).getCategories();
 });
 
 /// 과목별 이어풀기 정보(있으면 홈에 진입점 노출). 풀이에서 돌아오면 invalidate.
 final resumeInfoProvider =
-    FutureProvider.autoDispose.family<ResumeInfo?, String>((ref, subjectId) {
-  return ref.watch(getResumeInfoProvider)(subjectId);
+    FutureProvider.autoDispose.family<ResumeInfo?, String>((ref, categoryId) {
+  return ref.watch(getResumeInfoProvider)(categoryId);
 });
 
 /// 과목 문항 통계(실측 — §3-1 하드코딩 금지). 홈/과목 화면 메타·모드 설명에 사용.
@@ -49,8 +49,8 @@ class SubjectStats {
 }
 
 final subjectStatsProvider =
-    FutureProvider.autoDispose.family<SubjectStats, String>((ref, subjectId) async {
-  final qs = await ref.watch(questionRepositoryProvider).getQuestions(subjectId);
+    FutureProvider.autoDispose.family<SubjectStats, String>((ref, categoryId) async {
+  final qs = await ref.watch(questionRepositoryProvider).getQuestions(categoryId);
   return SubjectStats(
     total: qs.length,
     mcq: qs.where((q) => q.type == QuestionType.mcq).length,
@@ -107,8 +107,8 @@ final recentSessionCardProvider =
   if (sessions.isEmpty) return null;
   final s = sessions.first;
   final collections =
-      await ref.watch(questionRepositoryProvider).getCollections();
-  QuestionCollection? col;
+      await ref.watch(questionRepositoryProvider).getCategories();
+  QuestionCategory? col;
   for (final c in collections) {
     if (c.id == s.collectionId) {
       col = c;

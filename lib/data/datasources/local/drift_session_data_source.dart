@@ -2,13 +2,13 @@ import 'package:drift/drift.dart';
 
 import 'app_database.dart';
 
-/// 이어풀기 세션의 Drift 저장소. key = `"$subjectId:normal"`.
+/// 이어풀기 세션의 Drift 저장소. key = `"$categoryId:normal"`.
 /// (구 IsarSessionDataSource 대체 — 시그니처 동일)
 class DriftSessionDataSource {
   final AppDatabase _db;
   DriftSessionDataSource(this._db);
 
-  String _key(String subjectId) => '$subjectId:normal';
+  String _key(String categoryId) => '$categoryId:normal';
 
   /// answers(`List<int>`, -1 = 미응답) ↔ CSV 문자열 직렬화.
   static String _encode(List<int> a) => a.join(',');

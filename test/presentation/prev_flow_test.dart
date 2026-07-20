@@ -23,7 +23,7 @@ void main() {
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
-          home: const QuizPage(subjectId: 's1', mode: QuizMode.exam),
+          home: const QuizPage(categoryId: 's1', mode: QuizMode.exam),
         ),
       );
 
@@ -38,7 +38,7 @@ void main() {
         child: MaterialApp(
           theme: AppTheme.light(),
           home:
-              QuizPage(subjectId: 's1', mode: QuizMode.normal, resume: resume),
+              QuizPage(categoryId: 's1', mode: QuizMode.normal, resume: resume),
         ),
       );
 

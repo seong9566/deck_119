@@ -28,7 +28,7 @@ class WrongEntries extends Table {
   Set<Column> get primaryKey => {questionId};
 }
 
-/// 이어풀기 세션(normal 한정). key = `"$subjectId:normal"`.
+/// 이어풀기 세션(normal 한정). key = `"$categoryId:normal"`.
 /// [answers]는 문항별 선택 인덱스(-1 = 미응답)를 CSV로 직렬화해 보관.
 class Sessions extends Table {
   TextColumn get key => text()();
@@ -96,7 +96,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +106,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) await m.createTable(generatedQuestions);
           // v3: 회수 대기 요청 테이블 추가.
           if (from < 3) await m.createTable(pendingAiRequests);
+          // v4: 분류를 법령 카테고리로 재편 → 구 키 세션 클리어(T20).
+          if (from < 4) await customStatement('DELETE FROM sessions');
         },
       );
 }
