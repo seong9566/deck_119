@@ -12,7 +12,7 @@ import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/widgets.dart';
 
 /// 과목(문제집) 탐색 — 하단 탭 IA의 두 번째 탭.
-/// 과목 선택 후 한 화면에 [법령별] + [기타] 섹션을 보여준다.
+/// 과목 선택 후 한 화면에 [전체 풀기] + [법령별] + [기타] 섹션을 보여준다.
 /// (과목이 1개인 현재는 그 과목을 바로 펼친다.)
 class SubjectsPage extends ConsumerWidget {
   const SubjectsPage({super.key});
@@ -40,6 +40,7 @@ class SubjectsPage extends ConsumerWidget {
           data: (all) {
             final laws = all.where((x) => x.group == '법령').toList();
             final etc = all.where((x) => x.group == '기타').toList();
+            final total = all.where((x) => x.group == '전체').toList();
             final twoCol = context.isTablet;
             return ResponsiveBody(
               maxWidth: AppBreakpoints.gridMax,
@@ -56,8 +57,12 @@ class SubjectsPage extends ConsumerWidget {
                   Text(subjectName ?? '소방관계법규',
                       style: AppText.titleScreen.copyWith(color: c.textPrimary)),
                   const SizedBox(height: AppSpacing.xs),
-                  Text('법령별로 문제집을 선택하세요',
+                  Text('전체 또는 법령별로 문제집을 선택하세요',
                       style: AppText.caption.copyWith(color: c.textTertiary)),
+                  if (total.isNotEmpty) ...[
+                    _SectionLabel('전체 풀기'),
+                    _CollectionGrid(cols: total, twoColumn: false),
+                  ],
                   if (laws.isNotEmpty) ...[
                     _SectionLabel('법령별'),
                     _CollectionGrid(cols: laws, twoColumn: twoCol),

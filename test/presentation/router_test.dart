@@ -60,6 +60,18 @@ void main() {
     expect(find.text('테스트법'), findsOneWidget);
   });
 
+  testWidgets('과목 → 전체 세트 → 전체 풀이 → /quiz (전체 진입점)', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('과목'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('전체'));
+    await tester.pumpAndSettle();
+    expect(find.text('선택한 문제집'), findsOneWidget);
+    await tester.tap(find.text('전체 풀이'));
+    await tester.pumpAndSettle();
+    expect(find.text('Q1 지문'), findsOneWidget);
+  });
+
   testWidgets('과목 → 전체 세트 → 전체 풀이 → /quiz', (tester) async {
     await pumpApp(tester);
     await openAllSet(tester);
