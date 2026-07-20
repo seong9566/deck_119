@@ -2,6 +2,7 @@
 class QuestionCategory {
   final String id;
   final String name;
+  final String? description;
 
   /// 묶음 구분('법령'·'기타'·'전체') — 목록 섹션 헤더용.
   final String group;
@@ -10,6 +11,7 @@ class QuestionCategory {
   const QuestionCategory({
     required this.id,
     required this.name,
+    this.description,
     required this.group,
     required this.count,
   });

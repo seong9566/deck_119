@@ -4,10 +4,16 @@ import '../../domain/entities/question.dart';
 class LawCategory {
   final String id;
   final String name;
+  final String? description;
 
   /// 목록 섹션 구분: '법령' | '기타' | '전체'.
   final String group;
-  const LawCategory({required this.id, required this.name, required this.group});
+  const LawCategory({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.group,
+  });
 }
 
 /// 유일 과목 id(= 콘텐츠 subjectId). '전체' 카테고리 id로도 쓴다.
@@ -33,8 +39,18 @@ const List<LawCategory> lawCategories = [
   LawCategory(id: catGongsa, name: '소방공사업법', group: '법령'),
   LawCategory(id: catWiheom, name: '위험물안전관리법', group: '법령'),
   LawCategory(id: catJosa, name: '화재조사법', group: '법령'),
-  LawCategory(id: catCross, name: '교차법령', group: '기타'),
-  LawCategory(id: catSimhwaEtc, name: '심화 OX·계산', group: '기타'),
+  LawCategory(
+    id: catCross,
+    name: '교차법령',
+    description: '여러 법령을 묶은 문항',
+    group: '기타',
+  ),
+  LawCategory(
+    id: catSimhwaEtc,
+    name: '심화 OX·계산',
+    description: 'OX·계산 등 심화 문항',
+    group: '기타',
+  ),
 ];
 
 /// 홈의 빠른/랜덤/오답/진척 분모 + 전체풀기용. 법령 목록과 별도.

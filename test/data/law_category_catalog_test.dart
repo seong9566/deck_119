@@ -78,4 +78,23 @@ void main() {
     expect(counts['fire-law::cross'], 39);
     expect(counts['fire-law::simhwa-etc'], 18);
   });
+
+  test('기타 카테고리만 설명을 갖는다', () {
+    expect(
+      lawCategories.singleWhere((category) => category.id == catCross).description,
+      '여러 법령을 묶은 문항',
+    );
+    expect(
+      lawCategories
+          .singleWhere((category) => category.id == catSimhwaEtc)
+          .description,
+      'OX·계산 등 심화 문항',
+    );
+
+    final lawDescriptions = lawCategories
+        .where((category) => category.id != catCross && category.id != catSimhwaEtc)
+        .map((category) => category.description);
+    expect(lawDescriptions, hasLength(6));
+    expect(lawDescriptions, everyElement(isNull));
+  });
 }
