@@ -138,3 +138,13 @@
 - **[P2b] 자정 경과 시 연속학습일수 미갱신** — `_streak`는 `DateTime.now()` 의존인데 스트림은 테이블 쓰기 때만 방출. 앱을 자정 넘겨 켜둔 채 쓰기가 0이면 어제 값 유지(다음 답·재시작이면 정정). 저비용 해법 = 앱 lifecycle resume 시 `progressStatsProvider` 갱신.
 
 원래 버그는 수정 + `home_reactive_test`로 E2E 검증 완료. 위 2건은 성능·시간의존 엣지로, 데이터가 커지거나 실사용 피드백이 있으면 착수.
+
+## 할 일(TODO) — 플랫폼 번들 ID 통일 (2026-07-20)
+
+**현재 상태(의도적 분리)**: Firebase App Distribution 배포를 위해 플랫폼별 번들 ID가 갈려 있음.
+- Android: `com.seong.deck119` (Firebase Android 앱)
+- iOS: `com.hyeonseong.fireDeck` (기존 fireDeck iOS 앱 재사용 — 이전에 이 번들로 배포한 이력이 있어 그대로 이어감. 팀 N264GQH9M6)
+
+**할 일**: 추후 iOS·Android 번들 ID를 **하나로 통일**한다(iOS 기준으로 맞추거나 단일 번들로 정리 — 방향은 착수 시 확정).
+
+**주의(통일 시 파급)**: 번들 ID 변경은 Firebase 앱 재등록(google-services.json·GoogleService-Info.plist 교체), App Distribution 앱/릴리스 새로 생성, iOS 프로비저닝 프로파일 재발급, 스토어 등록(App Store/Play Console) 시 앱 식별자 영향까지 연쇄됨. 배포 이력·테스터 그룹이 새 번들로 이관되어야 하므로 배포 공백을 감안해 계획적으로 진행.
