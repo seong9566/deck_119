@@ -28,7 +28,7 @@ class WrongEntries extends Table {
   Set<Column> get primaryKey => {questionId};
 }
 
-/// 이어풀기 세션(normal 한정). key = `"$subjectId:normal"`.
+/// 이어풀기 세션(normal 한정). key = `"$categoryId:normal"`.
 /// [answers]는 문항별 선택 인덱스(-1 = 미응답)를 CSV로 직렬화해 보관.
 class Sessions extends Table {
   TextColumn get key => text()();

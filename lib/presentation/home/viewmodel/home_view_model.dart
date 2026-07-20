@@ -18,7 +18,7 @@ class HomeViewModel extends AsyncNotifier<List<Subject>> {
   }
 }
 
-/// 선택 가능한 문제 세트 목록(원형 회차별·심화·전체).
+/// 선택 가능한 카테고리 목록(법령별·교차법령·심화 OX·계산 + 전체).
 final categoriesProvider =
     FutureProvider<List<QuestionCategory>>((ref) async {
   return ref.watch(questionRepositoryProvider).getCategories();

@@ -25,7 +25,7 @@ void main() {
       expect(classifyCategoryId(_q(['위험물안전관리법'])), 'fire-law::law:wiheom');
     });
 
-    test('소방시설법 이름 변형 5종 → 하나로 정규화', () {
+    test('소방시설법 이름 변형 4종 → 하나로 정규화', () {
       for (final t in [
         '소방시설 설치 및 관리에 관한 법률',
         '소방시설 설치 및 관리에 관한 법',

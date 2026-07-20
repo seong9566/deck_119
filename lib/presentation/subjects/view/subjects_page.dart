@@ -12,7 +12,7 @@ import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/widgets.dart';
 
 /// 과목(문제집) 탐색 — 하단 탭 IA의 두 번째 탭.
-/// 과목 선택 후 한 화면에 [회차별(원형)] + [난이도별(심화·전체)] 섹션을 보여준다.
+/// 과목 선택 후 한 화면에 [법령별] + [기타] 섹션을 보여준다.
 /// (과목이 1개인 현재는 그 과목을 바로 펼친다.)
 class SubjectsPage extends ConsumerWidget {
   const SubjectsPage({super.key});

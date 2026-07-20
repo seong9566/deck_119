@@ -6,9 +6,9 @@ import '../entities/subject.dart';
 abstract interface class QuestionRepository {
   Future<List<Subject>> getSubjects();
 
-  /// 선택 가능한 문제 세트 목록(원형 회차별·심화·전체).
+  /// 선택 가능한 카테고리 목록(법령별·교차법령·심화 OX·계산 + 전체).
   Future<List<QuestionCategory>> getCategories();
 
-  /// 세트 id로 문제를 필터해 반환. id가 `subject::필터`면 필터 적용, 아니면 과목 전체.
+  /// 카테고리 id로 문제를 필터해 반환. 전체(과목 id)면 전 문항, 아니면 그 카테고리 문항.
   Future<List<Question>> getQuestions(String collectionId);
 }
