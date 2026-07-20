@@ -96,7 +96,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,6 +106,8 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) await m.createTable(generatedQuestions);
           // v3: 회수 대기 요청 테이블 추가.
           if (from < 3) await m.createTable(pendingAiRequests);
+          // v4: 분류를 법령 카테고리로 재편 → 구 키 세션 클리어(T20).
+          if (from < 4) await customStatement('DELETE FROM sessions');
         },
       );
 }
