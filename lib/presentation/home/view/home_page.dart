@@ -21,9 +21,7 @@ class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   void _refresh(WidgetRef ref, String collectionId) {
-    ref.invalidate(recentSessionCardProvider);
-    ref.invalidate(progressStatsProvider);
-    ref.invalidate(wrongCountProvider);
+    // 대시보드 3종은 StreamProvider라 자동 갱신, resumeInfoProvider만 프리워밍.
     ref.invalidate(resumeInfoProvider(collectionId));
   }
 

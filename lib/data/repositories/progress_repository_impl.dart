@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/entities/progress_stats.dart';
 import '../../domain/repositories/progress_repository.dart';
 import '../datasources/local/drift_progress_data_source.dart';
@@ -21,6 +23,9 @@ class ProgressRepositoryImpl implements ProgressRepository {
   Future<Set<String>> getWrongIds() => _local.wrongIds();
 
   @override
+  Stream<Set<String>> watchWrongIds() => _local.watchWrongIds();
+
+  @override
   Future<void> clearWrong(String questionId) => _local.clear(questionId);
 
   @override
@@ -31,6 +36,18 @@ class ProgressRepositoryImpl implements ProgressRepository {
       correct: s.correct,
       distinctAttempted: s.distinct,
       streakDays: s.streak,
+    );
+  }
+
+  @override
+  Stream<ProgressStats> watchStats() {
+    return _local.watchStats().map(
+      (s) => ProgressStats(
+        attempts: s.attempts,
+        correct: s.correct,
+        distinctAttempted: s.distinct,
+        streakDays: s.streak,
+      ),
     );
   }
 }

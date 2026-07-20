@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'app_database.dart';
 
 /// 진척·오답의 Drift 저장소. (구 IsarProgressDataSource 대체 — 시그니처 동일)
@@ -33,6 +35,13 @@ class DriftProgressDataSource {
     return rows.map((e) => e.questionId).toSet();
   }
 
+  /// 오답 세트(문제 id) 스트림.
+  Stream<Set<String>> watchWrongIds() {
+    return _db.select(_db.wrongEntries).watch().map(
+          (rows) => rows.map((e) => e.questionId).toSet(),
+        );
+  }
+
   /// 오답 세트에서 제거.
   Future<void> clear(String questionId) async {
     await (_db.delete(_db.wrongEntries)
@@ -44,6 +53,17 @@ class DriftProgressDataSource {
   Future<({int attempts, int correct, int distinct, int streak})>
       stats() async {
     final all = await _db.select(_db.attemptRecords).get();
+    return _aggregate(all);
+  }
+
+  /// 시도 로그 집계 스트림.
+  Stream<({int attempts, int correct, int distinct, int streak})>
+      watchStats() {
+    return _db.select(_db.attemptRecords).watch().map(_aggregate);
+  }
+
+  static ({int attempts, int correct, int distinct, int streak}) _aggregate(
+      List<AttemptRecord> all) {
     var correct = 0;
     final ids = <String>{};
     final days = <int>{}; // 로컬 자정 기준 epoch day

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/progress_stats.dart';
 import 'package:deck_119/domain/entities/question.dart';
@@ -47,6 +49,9 @@ class FakeProgressRepository implements ProgressRepository {
   Future<Set<String>> getWrongIds() async => {...wrong};
 
   @override
+  Stream<Set<String>> watchWrongIds() => Stream.value({...wrong});
+
+  @override
   Future<void> clearWrong(String questionId) async => wrong.remove(questionId);
 
   @override
@@ -56,6 +61,9 @@ class FakeProgressRepository implements ProgressRepository {
         distinctAttempted: 0,
         streakDays: 0,
       );
+
+  @override
+  Stream<ProgressStats> watchStats() => Stream.fromFuture(getStats());
 }
 
 /// 테스트용 인메모리 이어풀기 저장소.
@@ -79,6 +87,10 @@ class FakeSessionRepository implements SessionRepository {
           RecentSession(
               collectionId: e.key, lastIndex: e.value.lastIndex, updatedAtMs: 0),
       ].take(limit).toList();
+
+  @override
+  Stream<List<RecentSession>> watchRecentSessions({int limit = 5}) =>
+      Stream.fromFuture(recentSessions(limit: limit));
 }
 
 /// 테스트용 인메모리 설정 저장소.

@@ -1,6 +1,7 @@
 import 'package:deck_119/data/datasources/local/app_database.dart';
 import 'package:deck_119/data/datasources/local/drift_progress_data_source.dart';
 import 'package:deck_119/data/repositories/progress_repository_impl.dart';
+import 'package:deck_119/domain/entities/progress_stats.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -78,5 +79,35 @@ void main() {
     final s = await DriftProgressDataSource(db).stats();
     expect(s.attempts, 0);
     expect(s.streak, 0);
+  });
+
+  // drift .watch()는 초기값 전달 전에 쓰기가 끝나면 중간값을 합칠 수 있어
+  // 초기 시퀀스가 아니라 emitsThrough로 "쓰기 후 목표 상태 방출"만 단정한다.
+  test('watchStats: 시도를 기록하면 갱신된 통계를 방출한다', () async {
+    final repo = ProgressRepositoryImpl(DriftProgressDataSource(db));
+    final done = expectLater(
+      repo.watchStats(),
+      emitsThrough(predicate<ProgressStats>((stats) => stats.attempts == 1)),
+    );
+
+    await repo.recordAttempt('q1', correct: false);
+    await done;
+  });
+
+  test('watchWrongIds: 오답을 추가하면 오답 세트를 방출한다', () async {
+    final repo = ProgressRepositoryImpl(DriftProgressDataSource(db));
+    final done = expectLater(repo.watchWrongIds(), emitsThrough(contains('q1')));
+
+    await repo.recordAttempt('q1', correct: false);
+    await done;
+  });
+
+  test('watchWrongIds: 정답 처리하면 오답 세트에서 제거해 방출한다', () async {
+    final repo = ProgressRepositoryImpl(DriftProgressDataSource(db));
+    await repo.recordAttempt('q1', correct: false); // 구독 전 오답 시드
+    final done = expectLater(repo.watchWrongIds(), emitsThrough(isEmpty));
+
+    await repo.recordAttempt('q1', correct: true);
+    await done;
   });
 }
