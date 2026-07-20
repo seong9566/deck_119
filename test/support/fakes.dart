@@ -33,8 +33,13 @@ class FakeQuestionRepository implements QuestionRepository {
 }
 
 /// 테스트용 인메모리 진척 저장소.
+/// watch는 실제 drift처럼 현재 스냅샷을 먼저 방출한 뒤 변이마다 갱신을 흘린다.
 class FakeProgressRepository implements ProgressRepository {
   final Set<String> wrong = {};
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+  void _notify() {
+    if (_changes.hasListener) _changes.add(null);
+  }
 
   @override
   Future<void> recordAttempt(String questionId, {required bool correct}) async {
@@ -43,16 +48,38 @@ class FakeProgressRepository implements ProgressRepository {
     } else {
       wrong.add(questionId);
     }
+    _notify();
+  }
+
+  @override
+  Future<void> recordAttempts(
+      List<({String questionId, bool correct})> attempts) async {
+    for (final a in attempts) {
+      if (a.correct) {
+        wrong.remove(a.questionId);
+      } else {
+        wrong.add(a.questionId);
+      }
+    }
+    _notify();
   }
 
   @override
   Future<Set<String>> getWrongIds() async => {...wrong};
 
   @override
-  Stream<Set<String>> watchWrongIds() => Stream.value({...wrong});
+  Stream<Set<String>> watchWrongIds() async* {
+    yield {...wrong};
+    await for (final _ in _changes.stream) {
+      yield {...wrong};
+    }
+  }
 
   @override
-  Future<void> clearWrong(String questionId) async => wrong.remove(questionId);
+  Future<void> clearWrong(String questionId) async {
+    wrong.remove(questionId);
+    _notify();
+  }
 
   @override
   Future<ProgressStats> getStats() async => ProgressStats(
@@ -63,23 +90,38 @@ class FakeProgressRepository implements ProgressRepository {
       );
 
   @override
-  Stream<ProgressStats> watchStats() => Stream.fromFuture(getStats());
+  Stream<ProgressStats> watchStats() async* {
+    yield await getStats();
+    await for (final _ in _changes.stream) {
+      yield await getStats();
+    }
+  }
 }
 
 /// 테스트용 인메모리 이어풀기 저장소.
+/// watch는 실제 drift처럼 현재 스냅샷을 먼저 방출한 뒤 변이마다 갱신을 흘린다.
 class FakeSessionRepository implements SessionRepository {
   final Map<String, ({int lastIndex, List<int?> answers})> _sessions = {};
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+  void _notify() {
+    if (_changes.hasListener) _changes.add(null);
+  }
 
   @override
   Future<({int lastIndex, List<int?> answers})?> load(String subjectId) async =>
       _sessions[subjectId];
 
   @override
-  Future<void> save(String subjectId, int lastIndex, List<int?> answers) async =>
-      _sessions[subjectId] = (lastIndex: lastIndex, answers: [...answers]);
+  Future<void> save(String subjectId, int lastIndex, List<int?> answers) async {
+    _sessions[subjectId] = (lastIndex: lastIndex, answers: [...answers]);
+    _notify();
+  }
 
   @override
-  Future<void> clear(String subjectId) async => _sessions.remove(subjectId);
+  Future<void> clear(String subjectId) async {
+    _sessions.remove(subjectId);
+    _notify();
+  }
 
   @override
   Future<List<RecentSession>> recentSessions({int limit = 5}) async => [
@@ -89,8 +131,12 @@ class FakeSessionRepository implements SessionRepository {
       ].take(limit).toList();
 
   @override
-  Stream<List<RecentSession>> watchRecentSessions({int limit = 5}) =>
-      Stream.fromFuture(recentSessions(limit: limit));
+  Stream<List<RecentSession>> watchRecentSessions({int limit = 5}) async* {
+    yield await recentSessions(limit: limit);
+    await for (final _ in _changes.stream) {
+      yield await recentSessions(limit: limit);
+    }
+  }
 }
 
 /// 테스트용 인메모리 설정 저장소.

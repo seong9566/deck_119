@@ -100,10 +100,12 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     final s = state.value;
     if (s == null || !s.isExam || s.finished) return;
 
-    final submitAnswer = ref.read(submitAnswerProvider);
-    for (var i = 0; i < s.questions.length; i++) {
-      await submitAnswer(s.questions[i], s.answers[i] ?? -1);
-    }
+    // 전 문항을 단일 배치로 채점·기록(문항별 순차 기록의 O(N²) 재집계 방지).
+    final entries = [
+      for (var i = 0; i < s.questions.length; i++)
+        (question: s.questions[i], selectedIndex: s.answers[i] ?? -1),
+    ];
+    await ref.read(submitAnswerProvider).submitAll(entries);
     state = AsyncData(s.copyWith(finished: true));
   }
 

@@ -29,6 +29,34 @@ class DriftProgressDataSource {
     });
   }
 
+  /// 여러 시도를 단일 트랜잭션으로 기록(시험 제출용). 트랜잭션 커밋 후
+  /// 드리프트가 테이블 변경 알림을 1회로 합쳐 watch 재집계 폭주를 막는다.
+  Future<void> recordBatch(
+    List<({String questionId, bool correct})> items, {
+    required int nowMs,
+  }) async {
+    await _db.transaction(() async {
+      for (final it in items) {
+        if (it.correct) {
+          await (_db.delete(_db.wrongEntries)
+                ..where((t) => t.questionId.equals(it.questionId)))
+              .go();
+        } else {
+          await _db.into(_db.wrongEntries).insertOnConflictUpdate(
+                WrongEntriesCompanion.insert(
+                    questionId: it.questionId, addedAtMs: nowMs),
+              );
+        }
+        await _db.into(_db.attemptRecords).insert(
+              AttemptRecordsCompanion.insert(
+                  questionId: it.questionId,
+                  isCorrect: it.correct,
+                  timestampMs: nowMs),
+            );
+      }
+    });
+  }
+
   /// 오답 세트(문제 id).
   Future<Set<String>> wrongIds() async {
     final rows = await _db.select(_db.wrongEntries).get();

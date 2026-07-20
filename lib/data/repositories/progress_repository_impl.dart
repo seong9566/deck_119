@@ -20,6 +20,12 @@ class ProgressRepositoryImpl implements ProgressRepository {
   }
 
   @override
+  Future<void> recordAttempts(
+          List<({String questionId, bool correct})> attempts) =>
+      _local.recordBatch(attempts,
+          nowMs: DateTime.now().millisecondsSinceEpoch);
+
+  @override
   Future<Set<String>> getWrongIds() => _local.wrongIds();
 
   @override

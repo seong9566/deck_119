@@ -110,4 +110,22 @@ void main() {
     await repo.recordAttempt('q1', correct: true);
     await done;
   });
+
+  test('recordBatch: 혼합 결과를 한 번에 기록한다', () async {
+    final ds = DriftProgressDataSource(db);
+    await ds.recordBatch(
+      [
+        (questionId: 'q1', correct: true),
+        (questionId: 'q2', correct: false),
+        (questionId: 'q3', correct: false),
+      ],
+      nowMs: 100,
+    );
+
+    final s = await ds.stats();
+    expect(s.attempts, 3);
+    expect(s.correct, 1);
+    expect(s.distinct, 3);
+    expect(await ds.wrongIds(), {'q2', 'q3'}); // 오답만 세트에 남는다
+  });
 }
