@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/entities/recent_session.dart';
 import '../../domain/repositories/session_repository.dart';
 import '../datasources/local/drift_session_data_source.dart';
@@ -40,5 +42,21 @@ class SessionRepositoryImpl implements SessionRepository {
           updatedAtMs: r.updatedAtMs,
         ),
     ];
+  }
+
+  @override
+  Stream<List<RecentSession>> watchRecentSessions({int limit = 5}) {
+    return _local
+        .watchRecent(limit)
+        .map(
+          (rows) => [
+            for (final r in rows)
+              RecentSession(
+                collectionId: r.subjectId,
+                lastIndex: r.lastIndex,
+                updatedAtMs: r.updatedAtMs,
+              ),
+          ],
+        );
   }
 }

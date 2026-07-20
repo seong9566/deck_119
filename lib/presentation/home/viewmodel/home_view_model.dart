@@ -58,15 +58,17 @@ final subjectStatsProvider =
   );
 });
 
-/// 홈 대시보드 진척 통계(정답률·연속학습·푼 문항 수). 풀이에서 돌아오면 invalidate.
-final progressStatsProvider = FutureProvider.autoDispose<ProgressStats>((ref) {
-  return ref.watch(progressRepositoryProvider).getStats();
+/// 시도 이력 테이블 구독 — 어디서 풀든 홈 진척 통계에 실시간 반영.
+final progressStatsProvider = StreamProvider.autoDispose<ProgressStats>((ref) {
+  return ref.watch(progressRepositoryProvider).watchStats();
 });
 
-/// 홈 대시보드 오답 개수. 풀이에서 돌아오면 invalidate.
-final wrongCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final ids = await ref.watch(progressRepositoryProvider).getWrongIds();
-  return ids.length;
+/// 오답 테이블 구독 — 어디서 풀든 홈 오답 개수에 실시간 반영.
+final wrongCountProvider = StreamProvider.autoDispose<int>((ref) {
+  return ref
+      .watch(progressRepositoryProvider)
+      .watchWrongIds()
+      .map((ids) => ids.length);
 });
 
 /// AI 문제함 누적 개수(실시간). 0이면 홈 진입점을 숨긴다.
@@ -100,26 +102,30 @@ class RecentSessionCard {
   });
 }
 
+/// 세션 테이블 구독 — 어디서 풀든 홈 이어풀기에 실시간 반영.
 final recentSessionCardProvider =
-    FutureProvider.autoDispose<RecentSessionCard?>((ref) async {
-  final sessions =
-      await ref.watch(sessionRepositoryProvider).recentSessions(limit: 1);
-  if (sessions.isEmpty) return null;
-  final s = sessions.first;
+    StreamProvider.autoDispose<RecentSessionCard?>((ref) async* {
   final collections =
       await ref.watch(questionRepositoryProvider).getCategories();
-  QuestionCategory? col;
-  for (final c in collections) {
-    if (c.id == s.collectionId) {
-      col = c;
-      break;
+  yield* ref
+      .watch(sessionRepositoryProvider)
+      .watchRecentSessions(limit: 1)
+      .map((sessions) {
+    if (sessions.isEmpty) return null;
+    final s = sessions.first;
+    QuestionCategory? col;
+    for (final c in collections) {
+      if (c.id == s.collectionId) {
+        col = c;
+        break;
+      }
     }
-  }
-  if (col == null) return null; // 세트 구성 변경 등으로 매칭 실패
-  return RecentSessionCard(
-    collectionId: col.id,
-    name: col.name,
-    position: s.lastIndex + 1,
-    total: col.count,
-  );
+    if (col == null) return null; // 세트 구성 변경 등으로 매칭 실패
+    return RecentSessionCard(
+      collectionId: col.id,
+      name: col.name,
+      position: s.lastIndex + 1,
+      total: col.count,
+    );
+  });
 });

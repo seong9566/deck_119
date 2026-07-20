@@ -1,6 +1,7 @@
 import 'package:deck_119/data/datasources/local/app_database.dart';
 import 'package:deck_119/data/datasources/local/drift_session_data_source.dart';
 import 'package:deck_119/data/repositories/session_repository_impl.dart';
+import 'package:deck_119/domain/entities/recent_session.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -52,5 +53,24 @@ void main() {
     final recent = await repo.recentSessions(limit: 2);
     expect(recent.map((r) => r.collectionId).toList(), ['s2', 's3']);
     expect(recent.first.lastIndex, 2);
+  });
+
+  // drift .watch()의 초기 emit이 쓰기와 합쳐질 수 있어 emitsThrough로 단정.
+  test('watchRecentSessions: 저장하면 최신 세션을 방출한다', () async {
+    final repo = SessionRepositoryImpl(DriftSessionDataSource(db));
+    final done = expectLater(
+      repo.watchRecentSessions(limit: 5),
+      emitsThrough(
+        predicate<List<RecentSession>>(
+          (sessions) =>
+              sessions.length == 1 &&
+              sessions.first.collectionId == 'fire-law' &&
+              sessions.first.lastIndex == 3,
+        ),
+      ),
+    );
+
+    await repo.save('fire-law', 3, [0, 1, 2]);
+    await done;
   });
 }

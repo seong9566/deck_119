@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'app_database.dart';
 
 /// 진척·오답의 Drift 저장소. (구 IsarProgressDataSource 대체 — 시그니처 동일)
@@ -27,10 +29,45 @@ class DriftProgressDataSource {
     });
   }
 
+  /// 여러 시도를 단일 트랜잭션으로 기록(시험 제출용). 트랜잭션 커밋 후
+  /// 드리프트가 테이블 변경 알림을 1회로 합쳐 watch 재집계 폭주를 막는다.
+  Future<void> recordBatch(
+    List<({String questionId, bool correct})> items, {
+    required int nowMs,
+  }) async {
+    await _db.transaction(() async {
+      for (final it in items) {
+        if (it.correct) {
+          await (_db.delete(_db.wrongEntries)
+                ..where((t) => t.questionId.equals(it.questionId)))
+              .go();
+        } else {
+          await _db.into(_db.wrongEntries).insertOnConflictUpdate(
+                WrongEntriesCompanion.insert(
+                    questionId: it.questionId, addedAtMs: nowMs),
+              );
+        }
+        await _db.into(_db.attemptRecords).insert(
+              AttemptRecordsCompanion.insert(
+                  questionId: it.questionId,
+                  isCorrect: it.correct,
+                  timestampMs: nowMs),
+            );
+      }
+    });
+  }
+
   /// 오답 세트(문제 id).
   Future<Set<String>> wrongIds() async {
     final rows = await _db.select(_db.wrongEntries).get();
     return rows.map((e) => e.questionId).toSet();
+  }
+
+  /// 오답 세트(문제 id) 스트림.
+  Stream<Set<String>> watchWrongIds() {
+    return _db.select(_db.wrongEntries).watch().map(
+          (rows) => rows.map((e) => e.questionId).toSet(),
+        );
   }
 
   /// 오답 세트에서 제거.
@@ -44,6 +81,17 @@ class DriftProgressDataSource {
   Future<({int attempts, int correct, int distinct, int streak})>
       stats() async {
     final all = await _db.select(_db.attemptRecords).get();
+    return _aggregate(all);
+  }
+
+  /// 시도 로그 집계 스트림.
+  Stream<({int attempts, int correct, int distinct, int streak})>
+      watchStats() {
+    return _db.select(_db.attemptRecords).watch().map(_aggregate);
+  }
+
+  static ({int attempts, int correct, int distinct, int streak}) _aggregate(
+      List<AttemptRecord> all) {
     var correct = 0;
     final ids = <String>{};
     final days = <int>{}; // 로컬 자정 기준 epoch day

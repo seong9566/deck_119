@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
@@ -60,5 +62,22 @@ class DriftSessionDataSource {
           updatedAtMs: r.updatedAtMs,
         ),
     ];
+  }
+
+  /// 최근 갱신순 세션 스트림(홈 이어풀기용). subjectId = 컬렉션 id.
+  Stream<List<({String subjectId, int lastIndex, int updatedAtMs})>> watchRecent(
+      int limit) {
+    return (_db.select(_db.sessions)
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedAtMs)])
+          ..limit(limit))
+        .watch()
+        .map((rows) => [
+              for (final r in rows)
+                (
+                  subjectId: r.subjectId,
+                  lastIndex: r.lastIndex,
+                  updatedAtMs: r.updatedAtMs,
+                ),
+            ]);
   }
 }
