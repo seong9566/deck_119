@@ -11,11 +11,16 @@
     <string>/usr/bin/caffeinate</string>
     <string>-s</string>
     <string>/opt/homebrew/bin/node</string>
-    <string>index.js</string>
+    <!-- index.js는 반드시 절대경로. 상대경로면 launchd 시작 시 getcwd로 풀다가
+         cwd가 TCC 보호 폴더(~/Desktop 등)면 uv_cwd EPERM으로 죽는다. -->
+    <string>/Users/ihyeonseong/Desktop/workspace/side_project/deck_119/worker/index.js</string>
   </array>
 
+  <!-- cwd는 TCC 보호 폴더(~/Desktop·~/Documents·~/Downloads) 밖의 /tmp로 둔다.
+       launchd가 Desktop으로 chdir하면 node 시작 시 getcwd가 EPERM(uv_cwd)으로 죽는다.
+       워커 파일 탐색은 전부 __dirname 기반이라 cwd 무관(claude 서브프로세스는 자체 os.tmpdir()). -->
   <key>WorkingDirectory</key>
-  <string>/Users/ihyeonseong/Desktop/workspace/side_project/deck_119/worker</string>
+  <string>/tmp</string>
 
   <key>EnvironmentVariables</key>
   <dict>
