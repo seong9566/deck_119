@@ -21,6 +21,8 @@ class FakeQuestionRepository implements QuestionRepository {
   @override
   Future<List<QuestionCategory>> getCategories() async => [
         QuestionCategory(
+            id: 's1::law:test', name: '테스트법', group: '법령', count: questions.length),
+        QuestionCategory(
             id: 's1', name: '전체', group: '전체', count: questions.length),
       ];
 

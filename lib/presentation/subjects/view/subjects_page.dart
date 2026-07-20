@@ -38,9 +38,8 @@ class SubjectsPage extends ConsumerWidget {
             description: '문항 데이터를 여는 중 문제가 생겼어요.\n앱을 다시 실행해 주세요.',
           ),
           data: (all) {
-            final rounds = all.where((x) => x.group == '원형').toList();
-            final difficulty =
-                all.where((x) => x.group == '심화' || x.group == '전체').toList();
+            final laws = all.where((x) => x.group == '법령').toList();
+            final etc = all.where((x) => x.group == '기타').toList();
             final twoCol = context.isTablet;
             return ResponsiveBody(
               maxWidth: AppBreakpoints.gridMax,
@@ -51,21 +50,21 @@ class SubjectsPage extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     child: Text('과목',
-                        style: AppText.label.copyWith(
-                            color: c.textTertiary, letterSpacing: 0.3)),
+                        style: AppText.label
+                            .copyWith(color: c.textTertiary, letterSpacing: 0.3)),
                   ),
                   Text(subjectName ?? '소방관계법규',
                       style: AppText.titleScreen.copyWith(color: c.textPrimary)),
                   const SizedBox(height: AppSpacing.xs),
-                  Text('회차별 또는 난이도별로 문제집을 선택하세요',
+                  Text('법령별로 문제집을 선택하세요',
                       style: AppText.caption.copyWith(color: c.textTertiary)),
-                  if (rounds.isNotEmpty) ...[
-                    _SectionLabel('회차별 · 원형(동형모의고사)'),
-                    _CollectionGrid(cols: rounds, twoColumn: twoCol),
+                  if (laws.isNotEmpty) ...[
+                    _SectionLabel('법령별'),
+                    _CollectionGrid(cols: laws, twoColumn: twoCol),
                   ],
-                  if (difficulty.isNotEmpty) ...[
-                    _SectionLabel('난이도별'),
-                    _CollectionGrid(cols: difficulty, twoColumn: twoCol),
+                  if (etc.isNotEmpty) ...[
+                    _SectionLabel('기타'),
+                    _CollectionGrid(cols: etc, twoColumn: twoCol),
                   ],
                 ],
               ),
@@ -135,7 +134,7 @@ class _CollectionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final emphasize = col.group != '원형';
+    final emphasize = col.group == '기타';
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Material(

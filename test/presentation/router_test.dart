@@ -34,7 +34,7 @@ void main() {
   Future<void> openAllSet(WidgetTester tester) async {
     await tester.tap(find.text('과목'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('전체'));
+    await tester.tap(find.text('테스트법'));
     await tester.pumpAndSettle();
   }
 
@@ -48,7 +48,7 @@ void main() {
     expect(find.text('테마'), findsOneWidget); // 설정 화면 섹션 라벨
   });
 
-  testWidgets('홈 → 과목 탭 → 세트 목록(회차별/난이도별)', (tester) async {
+  testWidgets('홈 → 과목 탭 → 세트 목록(법령별)', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('과목'));
@@ -56,8 +56,8 @@ void main() {
 
     // 과목 탭 = 과목 헤더 + 난이도별(전체) 세트.
     expect(find.text('테스트과목'), findsOneWidget); // 과목명
-    expect(find.text('난이도별'), findsOneWidget);
-    expect(find.text('전체'), findsOneWidget);
+    expect(find.text('법령별'), findsOneWidget);
+    expect(find.text('테스트법'), findsOneWidget);
   });
 
   testWidgets('과목 → 전체 세트 → 전체 풀이 → /quiz', (tester) async {
