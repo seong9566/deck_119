@@ -41,7 +41,6 @@ class SubjectsPage extends ConsumerWidget {
             final laws = all.where((x) => x.group == '법령').toList();
             final etc = all.where((x) => x.group == '기타').toList();
             final total = all.where((x) => x.group == '전체').toList();
-            final twoCol = context.isTablet;
             return ResponsiveBody(
               maxWidth: AppBreakpoints.gridMax,
               child: ListView(
@@ -65,11 +64,11 @@ class SubjectsPage extends ConsumerWidget {
                   ],
                   if (laws.isNotEmpty) ...[
                     _SectionLabel('법령별'),
-                    _CollectionGrid(cols: laws, twoColumn: twoCol),
+                    _CollectionGrid(cols: laws, twoColumn: true),
                   ],
                   if (etc.isNotEmpty) ...[
                     _SectionLabel('기타'),
-                    _CollectionGrid(cols: etc, twoColumn: twoCol),
+                    _CollectionGrid(cols: etc, twoColumn: true),
                   ],
                 ],
               ),
@@ -97,7 +96,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-/// 컬렉션 목록 레이아웃 — 폰은 1열, 태블릿은 2열 그리드.
+/// 컬렉션 목록 레이아웃 — [twoColumn]에 따라 1열 또는 2열 그리드.
 /// [_CollectionRow]가 자체 하단 여백(md)을 가지므로 세로 간격은 그대로,
 /// 2열에서는 [Row]+[Expanded]로 가로 균등 배치하고 사이에 md 간격을 준다.
 class _CollectionGrid extends StatelessWidget {
@@ -170,6 +169,13 @@ class _CollectionRow extends StatelessWidget {
                             style: AppText.choice
                                 .copyWith(color: c.textPrimary, fontSize: 16)),
                         const SizedBox(height: 3),
+                        if (col.description != null &&
+                            col.description!.isNotEmpty) ...[
+                          Text(col.description!,
+                              style: AppText.caption
+                                  .copyWith(color: c.textTertiary)),
+                          const SizedBox(height: 3),
+                        ],
                         Text('${col.count}문항',
                             style: AppText.caption
                                 .copyWith(color: c.textSecondary)),

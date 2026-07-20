@@ -34,7 +34,11 @@ class QuestionRepositoryImpl implements QuestionRepository {
       for (final def in lawCategories)
         if ((counts[def.id] ?? 0) > 0)
           QuestionCategory(
-              id: def.id, name: def.name, group: def.group, count: counts[def.id]!),
+              id: def.id,
+              name: def.name,
+              description: def.description,
+              group: def.group,
+              count: counts[def.id]!),
       QuestionCategory(
           id: allCategory.id,
           name: allCategory.name,
