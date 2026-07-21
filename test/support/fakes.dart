@@ -1,15 +1,121 @@
 import 'dart:async';
 
+import 'package:deck_119/core/notifications/notification_service.dart';
 import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/progress_stats.dart';
 import 'package:deck_119/domain/entities/question.dart';
 import 'package:deck_119/domain/entities/question_category.dart';
 import 'package:deck_119/domain/entities/recent_session.dart';
 import 'package:deck_119/domain/entities/subject.dart';
+import 'package:deck_119/domain/repositories/ai_question_repository.dart';
+import 'package:deck_119/domain/repositories/generated_question_repository.dart';
 import 'package:deck_119/domain/repositories/progress_repository.dart';
 import 'package:deck_119/domain/repositories/question_repository.dart';
 import 'package:deck_119/domain/repositories/session_repository.dart';
 import 'package:deck_119/domain/repositories/settings_repository.dart';
+
+/// 테스트용 AI 생성 저장소. doc별 결과 스트림을 테스트에서 직접 방출한다.
+class FakeAiQuestionRepository implements AiQuestionRepository {
+  final List<({String subjectId, String yearScope, int count, String type})>
+      submitCalls = [];
+  final List<String> removePendingCalls = [];
+  final Map<String, StreamController<AiGenOutcome>> _controllers = {};
+  var _nextDocId = 1;
+  String? _latestDocId;
+
+  @override
+  Future<String> submit({
+    required String subjectId,
+    required String yearScope,
+    required int count,
+    required String type,
+  }) async {
+    submitCalls.add((
+      subjectId: subjectId,
+      yearScope: yearScope,
+      count: count,
+      type: type,
+    ));
+    final docId = 'doc-${_nextDocId++}';
+    _latestDocId = docId;
+    return docId;
+  }
+
+  @override
+  Stream<AiGenOutcome> watch(String docId) => _controllers
+      .putIfAbsent(docId, () => StreamController<AiGenOutcome>.broadcast())
+      .stream;
+
+  void emit(AiGenOutcome outcome) {
+    final docId = _latestDocId;
+    if (docId == null) throw StateError('submit을 먼저 호출해야 합니다.');
+    _controllers[docId]!.add(outcome);
+  }
+
+  void emitError(Object error) {
+    final docId = _latestDocId;
+    if (docId == null) throw StateError('submit을 먼저 호출해야 합니다.');
+    _controllers[docId]!.addError(error);
+  }
+
+  @override
+  Future<void> removePending(String docId) async {
+    removePendingCalls.add(docId);
+  }
+
+  @override
+  Future<List<Question>> recoverCompleted() async => [];
+
+  void dispose() {
+    for (final controller in _controllers.values) {
+      unawaited(controller.close());
+    }
+  }
+}
+
+class FakeNotificationService implements NotificationService {
+  final List<int> doneCounts = [];
+  var errorCount = 0;
+
+  @override
+  Future<void> init({void Function()? onTapHome}) async {}
+
+  @override
+  Future<void> showDone(int count) async {
+    doneCounts.add(count);
+  }
+
+  @override
+  Future<void> showError() async {
+    errorCount++;
+  }
+}
+
+/// 테스트용 인메모리 AI 문항 적립함.
+class FakeGeneratedQuestionRepository implements GeneratedQuestionRepository {
+  final List<Question> savedQuestions = [];
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+
+  @override
+  Future<void> save(List<Question> questions) async {
+    savedQuestions.addAll(questions);
+    if (_changes.hasListener) _changes.add(null);
+  }
+
+  @override
+  Future<List<Question>> getAll(String subjectId) async =>
+      savedQuestions.where((q) => q.subjectId == subjectId).toList();
+
+  @override
+  Stream<int> watchCount(String subjectId) async* {
+    yield (await getAll(subjectId)).length;
+    await for (final _ in _changes.stream) {
+      yield (await getAll(subjectId)).length;
+    }
+  }
+
+  void dispose() => unawaited(_changes.close());
+}
 
 /// 테스트용 고정 콘텐츠 저장소.
 class FakeQuestionRepository implements QuestionRepository {

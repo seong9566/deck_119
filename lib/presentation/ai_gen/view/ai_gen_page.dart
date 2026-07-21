@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../domain/entities/question.dart';
-import '../../../domain/entities/quiz_mode.dart';
-import '../../../domain/repositories/ai_question_repository.dart';
 import '../../app_router.dart';
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
 import '../../shared/theme/app_typography.dart';
 import '../../shared/widgets/widgets.dart';
-import '../viewmodel/ai_gen_view_model.dart';
+import '../viewmodel/ai_generation_controller.dart';
 
 /// AI 문제 생성 옵션 화면. 년도(2025/2026/전체)·문항 수·유형 선택 → 백엔드 호출 →
-/// 성공 시 풀이(ai 모드)로 이동. AI 문항은 "참고용"(ADR-0002).
+/// 제출 후 홈으로 이동. AI 문항은 "참고용"(ADR-0002).
 class AiGenPage extends ConsumerStatefulWidget {
   static const subjectId = 'fire-law';
   const AiGenPage({super.key});
@@ -28,23 +25,6 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
   String _year = 'all'; // "2025" | "2026" | "all"
   String _type = 'mcq'; // "mcq" | "ox" | "mixed"
 
-  void _onResult(AsyncValue<List<Question>?> next) {
-    next.whenOrNull(
-      data: (questions) {
-        if (questions == null) return; // 대기 상태
-        ref.invalidate(aiGenProvider); // 재진입 시 중복 이동 방지
-        if (questions.isEmpty) {
-          _snack('생성된 문제가 없어요. 다시 시도해 주세요.');
-          return;
-        }
-        context.push(Routes.quizLink(AiGenPage.subjectId, QuizMode.ai));
-      },
-      error: (e, _) => _snack(
-        e is AiGenException ? e.message : '생성에 실패했어요. 다시 시도해 주세요.',
-      ),
-    );
-  }
-
   void _snack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -52,18 +32,30 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
       ..showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  void _generate() {
-    ref.read(aiGenProvider.notifier).run(
-          subjectId: AiGenPage.subjectId,
-          options: (yearScope: _year, count: _count, type: _type),
-        );
+  Future<void> _generate() async {
+    try {
+      final ok = await ref
+          .read(aiGenerationControllerProvider.notifier)
+          .start(
+            subjectId: AiGenPage.subjectId,
+            options: (yearScope: _year, count: _count, type: _type),
+          );
+      if (!mounted) return;
+      if (ok) {
+        _snack('생성 시작! 완료되면 알림드려요');
+        _closeToHome(context);
+      } else {
+        _snack('이미 생성 중이에요. 완료되면 알려드려요.');
+      }
+    } catch (_) {
+      if (mounted) _snack('생성 요청에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(aiGenProvider, (_, next) => _onResult(next));
     final c = context.colors;
-    final loading = ref.watch(aiGenProvider).isLoading;
+    final busy = ref.watch(aiGenerationControllerProvider) != null;
 
     return Scaffold(
       backgroundColor: c.background,
@@ -79,7 +71,7 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
                       style: AppText.titleScreen.copyWith(color: c.textPrimary)),
                   const Spacer(),
                   IconButton(
-                    onPressed: loading ? null : () => _closeToHome(context),
+                    onPressed: () => _closeToHome(context),
                     icon: const Icon(Icons.close),
                     color: c.textTertiary,
                     iconSize: 20,
@@ -129,7 +121,7 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.xl,
                       AppSpacing.md - 2, AppSpacing.xl, AppSpacing.lg),
-                  child: loading
+                  child: busy
                       ? _GeneratingButton(color: c.brand)
                       : PrimaryButton(label: 'AI로 10문제 만들기', onPressed: _generate),
                 ),
