@@ -10,10 +10,10 @@
   <array>
     <string>/usr/bin/caffeinate</string>
     <string>-s</string>
-    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/stecdev/.nvm/versions/node/v22.11.0/bin/node</string>
     <!-- index.js는 반드시 절대경로. 상대경로면 launchd 시작 시 getcwd로 풀다가
          cwd가 TCC 보호 폴더(~/Desktop 등)면 uv_cwd EPERM으로 죽는다. -->
-    <string>/Users/ihyeonseong/Desktop/workspace/side_project/deck_119/worker/index.js</string>
+    <string>/Users/stecdev/Desktop/workspace/personal_project/deck_119/worker/index.js</string>
   </array>
 
   <!-- cwd는 TCC 보호 폴더(~/Desktop·~/Documents·~/Downloads) 밖의 /tmp로 둔다.
@@ -24,19 +24,26 @@
 
   <key>EnvironmentVariables</key>
   <dict>
-    <!-- launchd 최소 PATH 보강(node가 하위 도구 탐색). -->
+    <!-- launchd 최소 PATH 보강(node가 하위 도구 탐색). nvm bin 우선. -->
     <key>PATH</key>
-    <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>/Users/stecdev/.nvm/versions/node/v22.11.0/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <!-- claude는 alias가 아니라 실제 바이너리 절대경로로 실행(execFile은 alias 무시). -->
     <key>GEN_CLI</key>
-    <string>/Users/ihyeonseong/.local/bin/claude</string>
+    <string>/Users/stecdev/.local/bin/claude</string>
+    <!-- claude 실패 시 폴백 codex. alias 무시 → 절대경로(Homebrew Apple Silicon). 배포 머신 경로와 일치 확인. -->
+    <key>CODEX_CLI</key>
+    <string>/opt/homebrew/bin/codex</string>
+    <!-- (선택) 생성 성공/실패 Discord 운영 알림. ⚠️ 비밀값 — 실제 webhook URL을 이 추적 파일에 커밋하지 말 것.
+         배포 머신에서 아래 빈 문자열을 실제 URL로 채운다(비우면 알림 off, 워커는 정상). -->
+    <key>DISCORD_WEBHOOK_URL</key>
+    <string></string>
     <!-- claude 인증(키체인) 접근용. HOME만으론 부족 — USER/LOGNAME 없으면 keychain을 못 열어 "Not logged in". -->
     <key>HOME</key>
-    <string>/Users/ihyeonseong</string>
+    <string>/Users/stecdev</string>
     <key>USER</key>
-    <string>ihyeonseong</string>
+    <string>stecdev</string>
     <key>LOGNAME</key>
-    <string>ihyeonseong</string>
+    <string>stecdev</string>
   </dict>
 
   <key>RunAtLoad</key>
@@ -46,8 +53,8 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/ihyeonseong/Library/Logs/deck119-worker.log</string>
+  <string>/Users/stecdev/Library/Logs/deck119-worker.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/ihyeonseong/Library/Logs/deck119-worker.log</string>
+  <string>/Users/stecdev/Library/Logs/deck119-worker.log</string>
 </dict>
 </plist>
