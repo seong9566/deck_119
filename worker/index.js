@@ -15,6 +15,7 @@ const os = require('os');
 const fs = require('fs');
 const crypto = require('crypto');
 const { loadBank, filterByYear, sampleFewShot, buildPrompt } = require('./prompt');
+const { notifyDiscord } = require('./notify');
 
 const execFileP = promisify(execFile);
 
@@ -61,19 +62,36 @@ async function handle(doc) {
   });
   if (!claimed) return;
 
+  const startedAt = Date.now();
   const data = doc.data();
   console.log(`[claim] ${ref.id} year=${data.yearScope} type=${data.type} n=${data.count}`);
   try {
     const pool = filterByYear(bank, data.yearScope);
     if (!pool.length) throw new Error('해당 년도 시드가 없습니다.');
     const prompt = buildPrompt({ input: data, fewShot: sampleFewShot(pool, FEW_SHOT_N) });
-    const questions = await generate(prompt);
+    const { questions, provider, claudeError } = await generate(prompt);
     if (!questions.length) throw new Error('유효한 문제를 생성하지 못했습니다.');
     await ref.update({
       status: 'done',
       questions,
       updatedAt: FieldValue.serverTimestamp(),
     });
+    const elapsedMs = Date.now() - startedAt;
+    const fields = [
+      { name: 'docId', value: ref.id, inline: true },
+      { name: '옵션', value: `${data.yearScope} / ${data.type}`, inline: true },
+      { name: '요청→생성', value: `${data.count} → ${questions.length}`, inline: true },
+      { name: 'provider', value: provider, inline: true },
+      { name: '소요', value: `${elapsedMs}ms`, inline: true },
+    ];
+    if (provider === 'codex') {
+      fields.push({ name: 'claude 실패사유', value: claudeError });
+    }
+    notifyDiscord({
+      title: '✅ AI 문제 생성 성공',
+      color: 0x2ecc71,
+      fields,
+    }).catch(() => {});
     console.log(`[done]  ${ref.id} → ${questions.length}문항`);
   } catch (e) {
     await ref.update({
@@ -81,6 +99,15 @@ async function handle(doc) {
       error: String(e.message || e).slice(0, 300),
       updatedAt: FieldValue.serverTimestamp(),
     });
+    notifyDiscord({
+      title: '❌ AI 문제 생성 실패',
+      color: 0xe74c3c,
+      fields: [
+        { name: 'docId', value: ref.id, inline: true },
+        { name: '옵션', value: `${data.yearScope} / ${data.type}`, inline: true },
+        { name: '에러', value: String(e.message || e).slice(0, 1000), inline: false },
+      ],
+    }).catch(() => {});
     console.error(`[error] ${ref.id}: ${e.message}`);
   }
 }
@@ -125,12 +152,12 @@ async function generate(prompt) {
   try {
     const questions = validate(await runClaude(full));
     if (!questions.length) throw new Error('claude: 유효 문항 0개');
-    return questions;
+    return { questions, provider: 'claude', claudeError: null };
   } catch (e) {
     console.warn(`[fallback] claude 실패 → codex 재시도: ${e.message}`);
     const questions = validate(await runCodex(full));
     if (!questions.length) throw new Error('codex 폴백도 유효 문항 0개');
-    return questions;
+    return { questions, provider: 'codex', claudeError: e.message };
   }
 }
 
