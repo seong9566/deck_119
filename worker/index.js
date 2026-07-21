@@ -13,6 +13,7 @@ const { promisify } = require('util');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const crypto = require('crypto');
 const { loadBank, filterByYear, sampleFewShot, buildPrompt } = require('./prompt');
 
 const execFileP = promisify(execFile);
@@ -100,7 +101,8 @@ async function runClaude(full) {
 
 // Codex 호출 → 최종 메시지 파일(-o) 읽기 → questions[] 파싱. 실패면 throw.
 async function runCodex(full) {
-  const outFile = path.join(os.tmpdir(), `codex-out-${process.pid}-${Date.now()}.txt`);
+  // 동시 폴백 시 병렬 handle이 같은 ms에 경로를 만들어 서로 덮어쓰지 않도록 UUID로 고유화.
+  const outFile = path.join(os.tmpdir(), `codex-out-${crypto.randomUUID()}.txt`);
   try {
     // 프롬프트는 stdin으로 넘기고 즉시 EOF. codex는 파이프된 stdin의 EOF를 기다리므로,
     // positional로 주면 execFile이 stdin을 안 닫아 무한 대기한다(실측). 최종 메시지는 -o 파일에서 읽는다.
