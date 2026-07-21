@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/question.dart';
@@ -10,25 +8,18 @@ import '../datasources/local/drift_pending_ai_data_source.dart';
 /// 앱은 요청 doc을 쓰고, 맥북 워커가 그걸 집어 CLI로 생성 후 결과를 doc에 기록한다.
 /// 앱은 그 doc을 구독하다 status=done이면 [Question](source: ai)으로 매핑한다.
 ///
-/// 타임아웃 안전망: 요청 doc id를 로컬([DriftPendingAiDataSource])에 기록해 두고,
-/// 앱이 타임아웃으로 결과를 못 받아도 [recoverCompleted]로 나중에 회수한다.
+/// 회수 안전망: 요청 doc id를 로컬([DriftPendingAiDataSource])에 기록해 두고,
+/// 앱이 결과를 못 받아도 [recoverCompleted]로 나중에 회수한다.
 class AiQuestionRepositoryImpl implements AiQuestionRepository {
   static const _collection = 'gen_requests';
 
   final FirebaseFirestore _db;
   final DriftPendingAiDataSource _pending;
 
-  /// 워커(맥북)가 꺼져 있거나 지연될 때의 대기 상한.
-  final Duration timeout;
-
-  AiQuestionRepositoryImpl(
-    this._db,
-    this._pending, {
-    this.timeout = const Duration(seconds: 90),
-  });
+  AiQuestionRepositoryImpl(this._db, this._pending);
 
   @override
-  Future<List<Question>> generate({
+  Future<String> submit({
     required String subjectId,
     required String yearScope,
     required int count,
@@ -43,40 +34,36 @@ class AiQuestionRepositoryImpl implements AiQuestionRepository {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
-    // 회수 안전망: 요청을 로컬에 기록(타임아웃돼도 나중에 회수).
+    // 회수 안전망: 요청을 로컬에 기록(앱이 종료돼도 나중에 회수).
     await _pending.add(doc.id,
         subjectId: subjectId,
         yearScope: yearScope,
         nowMs: DateTime.now().millisecondsSinceEpoch);
-
-    try {
-      final snap = await doc
-          .snapshots()
-          .firstWhere((s) {
-            final st = s.data()?['status'];
-            return st == 'done' || st == 'error';
-          })
-          .timeout(timeout);
-
-      final data = snap.data()!;
-      if (data['status'] == 'error') {
-        await _pending.remove(doc.id); // 실패는 회수 대상 아님
-        throw AiGenException(data['error'] as String? ?? '생성에 실패했어요.');
-      }
-
-      final questions =
-          _mapQuestions(data, docId: doc.id, subjectId: subjectId, yearScope: yearScope);
-      await _pending.remove(doc.id); // 정상 수신 → 대기목록에서 제거
-      return questions;
-    } on TimeoutException {
-      // 대기목록에 남긴다 → 홈 진입 시 recoverCompleted가 회수.
-      throw AiGenException('생성이 오래 걸려요. 완료되면 홈 "AI 문제함"에 담겨요.');
-    } on AiGenException {
-      rethrow;
-    } catch (e) {
-      throw AiGenException('생성에 실패했어요. 잠시 후 다시 시도해 주세요.');
-    }
+    return doc.id;
   }
+
+  @override
+  Stream<AiGenOutcome> watch(String docId) {
+    return _db.collection(_collection).doc(docId).snapshots().where((s) {
+      final st = s.data()?['status'];
+      return st == 'done' || st == 'error';
+    }).map((s) {
+      final data = s.data()!;
+      if (data['status'] == 'error') {
+        return AiGenError(data['error'] as String? ?? '생성에 실패했어요.');
+      }
+      final questions = _mapQuestions(
+        data,
+        docId: docId,
+        subjectId: data['subjectId'] as String? ?? '',
+        yearScope: data['yearScope'] as String? ?? 'all',
+      );
+      return AiGenDone(questions);
+    });
+  }
+
+  @override
+  Future<void> removePending(String docId) => _pending.remove(docId);
 
   @override
   Future<List<Question>> recoverCompleted() async {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'data/datasources/local/app_database.dart';
 import 'di.dart';
+import 'presentation/app_router.dart';
 import 'presentation/settings/theme_mode_mapper.dart';
 import 'presentation/settings/viewmodel/settings_view_model.dart';
 import 'presentation/shared/theme/app_theme.dart';
@@ -13,9 +14,15 @@ Future<void> main() async {
   // 네이티브 설정(iOS GoogleService-Info.plist / Android google-services.json) 기반 초기화.
   await Firebase.initializeApp();
   final db = AppDatabase();
+  final container = ProviderContainer(
+    overrides: [appDatabaseProvider.overrideWithValue(db)],
+  );
+  await container.read(notificationServiceProvider).init(
+        onTapHome: () => container.read(routerProvider).go(Routes.home),
+      );
   runApp(
-    ProviderScope(
-      overrides: [appDatabaseProvider.overrideWithValue(db)],
+    UncontrolledProviderScope(
+      container: container,
       child: const Deck119App(),
     ),
   );

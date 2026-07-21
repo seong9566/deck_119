@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../di.dart';
 import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/quiz_mode.dart';
+import '../../ai_gen/viewmodel/ai_generation_controller.dart';
 import '../../ai_gen/viewmodel/ai_gen_view_model.dart';
 import '../../app_router.dart';
 import '../../shared/theme/app_colors.dart';
@@ -52,6 +53,7 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final collectionsAsync = ref.watch(categoriesProvider);
+    final aiGenerating = ref.watch(aiGenerationControllerProvider) != null;
 
     return Scaffold(
       backgroundColor: c.background,
@@ -87,6 +89,10 @@ class HomePage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.huge),
               children: [
+                if (aiGenerating) ...[
+                  const _AiGeneratingNotice(),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -162,6 +168,31 @@ class HomePage extends ConsumerWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _AiGeneratingNotice extends StatelessWidget {
+  const _AiGeneratingNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: c.brandTint,
+        border: Border.all(color: c.brand),
+        borderRadius: appTileRadius,
+      ),
+      child: Text(
+        '🔄 AI 문제 생성 중…',
+        style: AppText.caption.copyWith(color: c.brandInk),
       ),
     );
   }

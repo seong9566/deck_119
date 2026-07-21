@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/notifications/notification_service.dart';
 import 'presentation/app_router.dart';
 
 import 'data/datasources/content_data_source.dart';
@@ -43,6 +44,10 @@ final appDatabaseProvider = Provider<AppDatabase>(
 /// go_router. ProviderScope 단위로 1개(테스트 격리 + 앱 내 안정).
 final routerProvider = Provider<GoRouter>((ref) => createRouter());
 
+/// 로컬 알림 서비스.
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => LocalNotificationService());
+
 // DataSource
 final _contentDataSourceProvider = Provider((ref) => ContentDataSource());
 final _progressDataSourceProvider =
@@ -72,7 +77,6 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 
 /// AI 문제 생성 저장소(Firestore 큐 중계 → 맥북 워커가 CLI로 생성).
 /// 기본 `(default)`가 아니라 명명된 DB(`deck-119-db`)를 사용.
-/// 10문항 생성은 오래 걸려 대기 상한을 240초로 둔다(초과분은 회수 안전망으로 흡수).
 final aiQuestionRepositoryProvider = Provider<AiQuestionRepository>(
   (ref) => AiQuestionRepositoryImpl(
     FirebaseFirestore.instanceFor(
@@ -80,7 +84,6 @@ final aiQuestionRepositoryProvider = Provider<AiQuestionRepository>(
       databaseId: 'deck-119-db',
     ),
     ref.watch(_pendingAiDataSourceProvider),
-    timeout: const Duration(seconds: 240),
   ),
 );
 
