@@ -12,6 +12,8 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
+const crypto = require('crypto');
 const { loadBank, filterByYear, sampleFewShot, buildPrompt } = require('./prompt');
 
 const execFileP = promisify(execFile);
@@ -22,9 +24,21 @@ const KEY_PATH =
   process.env.GOOGLE_APPLICATION_CREDENTIALS ||
   path.join(__dirname, 'service-account.json');
 
-// 로컬 CLI. 기본 Claude Code(`claude`). 다른 CLI면 GEN_CLI로 교체하고 buildArgs 수정.
-const CLI = process.env.GEN_CLI || 'claude';
-const buildArgs = (prompt) => ['-p', prompt, '--output-format', 'json'];
+// 생성 CLI 2종. 기본 Claude(-p json 봉투), 실패 시 폴백 Codex(exec -o 파일).
+// CLAUDE_CLI는 레거시 GEN_CLI도 인정(기존 launchd plist가 GEN_CLI로 claude 절대경로 주입 중).
+const CLAUDE_CLI = process.env.CLAUDE_CLI || process.env.GEN_CLI || 'claude';
+const CODEX_CLI = process.env.CODEX_CLI || 'codex';
+// codex 기본 reasoning effort=high는 문제 창작에 수 분 걸림 → per-invocation으로 낮춘다
+// (전역 ~/.codex/config.toml은 안 건드림). 배포 때 CODEX_EFFORT로 조정. 실측: medium≈87s·low≈61s.
+const CODEX_EFFORT = process.env.CODEX_EFFORT || 'medium';
+const claudeArgs = (prompt) => ['-p', prompt, '--output-format', 'json'];
+// 프롬프트는 stdin으로(끝 인자 `-`). tmpdir는 git repo가 아니라 --skip-git-repo-check 필요.
+// read-only = 텍스트 생성만(쉘 명령·쓰기 없음, 승인 프롬프트도 안 뜸).
+const codexArgs = (outFile) => [
+  'exec', '--skip-git-repo-check', '--sandbox', 'read-only',
+  '-c', `model_reasoning_effort="${CODEX_EFFORT}"`,
+  '-o', outFile, '-',
+];
 
 const FEW_SHOT_N = 6;
 const COLLECTION = 'gen_requests';
@@ -53,7 +67,7 @@ async function handle(doc) {
     const pool = filterByYear(bank, data.yearScope);
     if (!pool.length) throw new Error('해당 년도 시드가 없습니다.');
     const prompt = buildPrompt({ input: data, fewShot: sampleFewShot(pool, FEW_SHOT_N) });
-    const questions = validate(await generate(prompt));
+    const questions = await generate(prompt);
     if (!questions.length) throw new Error('유효한 문제를 생성하지 못했습니다.');
     await ref.update({
       status: 'done',
@@ -71,23 +85,53 @@ async function handle(doc) {
   }
 }
 
-// CLI 호출 → 모델 출력에서 questions[] 파싱.
-async function generate(prompt) {
-  const full = `${prompt.system}\n\n${prompt.user}`;
-  // 중립 임시 폴더에서 실행 → 프로젝트 CLAUDE.md 등 컨텍스트 주입 방지(노이즈·지연·비용↓).
-  const { stdout } = await execFileP(CLI, buildArgs(full), {
+// Claude 호출 → 봉투 검사 → questions[] 파싱. 실패 신호면 throw(폴백 유도).
+async function runClaude(full) {
+  const { stdout } = await execFileP(CLAUDE_CLI, claudeArgs(full), {
     cwd: os.tmpdir(),
     maxBuffer: 10 * 1024 * 1024,
   });
-  // `claude -p --output-format json`은 봉투 JSON({type,result,...}). result에 모델 텍스트.
-  let text = stdout;
-  try {
-    const env = JSON.parse(stdout);
-    text = env.result ?? env.content ?? stdout;
-  } catch (_) {
-    /* 봉투가 아니면 원문 그대로 파싱 */
+  // claude -p --output-format json 은 봉투 JSON({type,result,is_error,...}).
+  const env = JSON.parse(stdout);
+  if (env.is_error || env.api_error_status || String(env.subtype ?? '').startsWith('error')) {
+    throw new Error(`claude 실패: subtype=${env.subtype} api=${env.api_error_status}`);
   }
-  return parseQuestions(text);
+  return parseQuestions(env.result ?? env.content ?? stdout);
+}
+
+// Codex 호출 → 최종 메시지 파일(-o) 읽기 → questions[] 파싱. 실패면 throw.
+async function runCodex(full) {
+  // 동시 폴백 시 병렬 handle이 같은 ms에 경로를 만들어 서로 덮어쓰지 않도록 UUID로 고유화.
+  const outFile = path.join(os.tmpdir(), `codex-out-${crypto.randomUUID()}.txt`);
+  try {
+    // 프롬프트는 stdin으로 넘기고 즉시 EOF. codex는 파이프된 stdin의 EOF를 기다리므로,
+    // positional로 주면 execFile이 stdin을 안 닫아 무한 대기한다(실측). 최종 메시지는 -o 파일에서 읽는다.
+    const proc = execFileP(CODEX_CLI, codexArgs(outFile), {
+      cwd: os.tmpdir(),
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    proc.child.stdin.end(full);
+    await proc;
+    return parseQuestions(fs.readFileSync(outFile, 'utf-8'));
+  } finally {
+    fs.rmSync(outFile, { force: true });
+  }
+}
+
+// Claude 우선. 하드 실패(프로세스·API·limit)든 콘텐츠 실패(파싱·유효문항 0)든
+// 실패하면 codex로 1회 폴백. validate까지 통과한 문항 배열을 반환.
+async function generate(prompt) {
+  const full = `${prompt.system}\n\n${prompt.user}`;
+  try {
+    const questions = validate(await runClaude(full));
+    if (!questions.length) throw new Error('claude: 유효 문항 0개');
+    return questions;
+  } catch (e) {
+    console.warn(`[fallback] claude 실패 → codex 재시도: ${e.message}`);
+    const questions = validate(await runCodex(full));
+    if (!questions.length) throw new Error('codex 폴백도 유효 문항 0개');
+    return questions;
+  }
 }
 
 function parseQuestions(text) {
@@ -149,4 +193,7 @@ db.collection(COLLECTION)
     (err) => console.error('watch error:', err),
   );
 
-console.log(`worker up (CLI=${CLI}). watching ${COLLECTION}(status=pending)…`);
+console.log(`worker up (claude→codex 폴백). watching ${COLLECTION}(status=pending)…`);
+
+// 테스트/재사용을 위한 export(워커 실행 시엔 무영향).
+module.exports = { generate, runClaude, runCodex, parseQuestions, validate };
