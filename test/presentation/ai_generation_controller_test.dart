@@ -97,6 +97,35 @@ void main() {
     expect(aiRepository.removePendingCalls, ['doc-1']);
     expect(container.read(aiGenerationControllerProvider), isNull);
   });
+
+  test('submit 대기 중 재요청도 중복 제출 없이 차단한다', () async {
+    final controller = container.read(aiGenerationControllerProvider.notifier);
+    final options = (yearScope: 'all', count: 10, type: 'mcq');
+
+    // 첫 start의 submit await 중 두 번째 start를 발사(둘 다 await 없이).
+    final first = controller.start(subjectId: 'fire-law', options: options);
+    final second = controller.start(subjectId: 'fire-law', options: options);
+    final results = await Future.wait([first, second]);
+
+    expect(results, [true, false]);
+    expect(aiRepository.submitCalls, hasLength(1));
+  });
+
+  test('watch 스트림 에러 시 오류 알림 후 작업을 정리한다', () async {
+    final controller = container.read(aiGenerationControllerProvider.notifier);
+    await controller.start(
+      subjectId: 'fire-law',
+      options: (yearScope: 'all', count: 10, type: 'mcq'),
+    );
+
+    aiRepository.emitError(Exception('firestore 권한 거부'));
+    await _flushListeners();
+
+    expect(notificationService.errorCount, 1);
+    expect(generatedRepository.savedQuestions, isEmpty);
+    expect(aiRepository.removePendingCalls, ['doc-1']);
+    expect(container.read(aiGenerationControllerProvider), isNull);
+  });
 }
 
 Future<void> _flushListeners() async {

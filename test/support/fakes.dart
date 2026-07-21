@@ -52,6 +52,12 @@ class FakeAiQuestionRepository implements AiQuestionRepository {
     _controllers[docId]!.add(outcome);
   }
 
+  void emitError(Object error) {
+    final docId = _latestDocId;
+    if (docId == null) throw StateError('submit을 먼저 호출해야 합니다.');
+    _controllers[docId]!.addError(error);
+  }
+
   @override
   Future<void> removePending(String docId) async {
     removePendingCalls.add(docId);
