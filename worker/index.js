@@ -85,7 +85,8 @@ async function handle(doc) {
       { name: '소요', value: `${elapsedMs}ms`, inline: true },
     ];
     if (provider === 'codex') {
-      fields.push({ name: 'claude 실패사유', value: claudeError });
+      // claude 하드 실패 시 e.message에 -p <프롬프트> 전체(수 KB)가 담김 → Discord 필드 1024자 제한 초과 방지.
+      fields.push({ name: 'claude 실패사유', value: String(claudeError).slice(0, 1000) });
     }
     notifyDiscord({
       title: '✅ AI 문제 생성 성공',
