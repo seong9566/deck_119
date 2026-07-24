@@ -36,6 +36,9 @@ class Question {
   final String difficulty;
   final List<String> tags;
 
+  /// 문항 도표/그림 에셋 경로(null이면 없음).
+  final String? imageAsset;
+
   /// 개수형 보기별 판정(비어 있으면 일반 문항 → 해설은 단일 텍스트로 렌더).
   final List<StatementVerdict> breakdown;
 
@@ -53,6 +56,7 @@ class Question {
     required this.explanation,
     required this.difficulty,
     required this.tags,
+    this.imageAsset,
     this.breakdown = const [],
     this.source = QuestionSource.bundled,
   });

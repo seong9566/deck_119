@@ -20,6 +20,7 @@ import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/question_repository_impl.dart';
 import 'data/repositories/session_repository_impl.dart';
 import 'data/repositories/settings_repository_impl.dart';
+import 'domain/entities/question.dart';
 import 'domain/repositories/generated_question_repository.dart';
 import 'domain/repositories/progress_repository.dart';
 import 'domain/repositories/question_repository.dart';
@@ -65,6 +66,12 @@ final _pendingAiDataSourceProvider =
 final questionRepositoryProvider = Provider<QuestionRepository>(
   (ref) => QuestionRepositoryImpl(ref.watch(_contentDataSourceProvider)),
 );
+
+/// 2026 기출(AI 참고용) 문항. 검수본 문제풀과 분리 — ai 모드로만 노출.
+final aiReferenceQuestionsProvider = FutureProvider<List<Question>>(
+  (ref) => ref.watch(_contentDataSourceProvider).loadAiReference(),
+);
+
 final progressRepositoryProvider = Provider<ProgressRepository>(
   (ref) => ProgressRepositoryImpl(ref.watch(_progressDataSourceProvider)),
 );

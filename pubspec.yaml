@@ -71,6 +71,7 @@ flutter:
   # 문제 콘텐츠 번들(architecture §4.1) — 확정셋 v3 시드
   assets:
     - assets/content/
+    - assets/content/images/
 
   # Pretendard 번들 폰트(DESIGN_HANDOFF §0 승인 예외). 4 weight.
   fonts:

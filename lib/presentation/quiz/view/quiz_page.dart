@@ -324,7 +324,11 @@ class _QuestionView extends ConsumerWidget {
                       const _AiReferenceNotice(),
                       const SizedBox(height: AppSpacing.lg),
                     ],
-                    QuestionCard(type: q.type, stem: q.stem),
+                    QuestionCard(
+                      type: q.type,
+                      stem: q.stem,
+                      imageAsset: q.imageAsset,
+                    ),
                     const SizedBox(height: AppSpacing.xl),
                     _choices(q, vm),
                     if (state.revealed) ...[
