@@ -49,6 +49,15 @@ class HomePage extends ConsumerWidget {
     await context.push(Routes.quizLink(subjectId, QuizMode.ai));
   }
 
+  /// 2026 기출(AI 참고) 진입 — 번들 참고 콘텐츠를 홀더에 주입 후 ai 모드로.
+  Future<void> _open2026Reference(BuildContext context, WidgetRef ref) async {
+    const subjectId = 'fire-law';
+    final questions = await ref.read(aiReferenceQuestionsProvider.future);
+    if (questions.isEmpty || !context.mounted) return;
+    ref.read(generatedQuestionsProvider.notifier).state = questions;
+    await context.push(Routes.quizLink(subjectId, QuizMode.ai));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
@@ -149,6 +158,10 @@ class HomePage extends ConsumerWidget {
                     onTap: () => _openAiBank(context, ref),
                   ),
                 ],
+                const SizedBox(height: AppSpacing.md),
+                _ReferenceExamEntry(
+                  onTap: () => _open2026Reference(context, ref),
+                ),
                 _SectionLabel('내 진척'),
                 _ProgressCard(
                   stats: stats,
@@ -487,6 +500,57 @@ class _AiBankEntry extends StatelessWidget {
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 2),
                       Text('누적 $count문항 · 참고용',
+                          style: AppText.caption
+                              .copyWith(color: c.textSecondary)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: c.textTertiary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 2026 기출(AI 참고용) 진입.
+class _ReferenceExamEntry extends StatelessWidget {
+  final VoidCallback onTap;
+  const _ReferenceExamEntry({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Material(
+      color: c.surface,
+      borderRadius: appTileRadius,
+      child: InkWell(
+        borderRadius: appTileRadius,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: appTileRadius,
+            border: Border.all(color: c.outline),
+            boxShadow: appCardShadow(c),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Icon(Icons.history_edu, color: c.brand, size: 24),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('2026 소방관계법규',
+                          style: AppText.choice.copyWith(
+                              color: c.textPrimary,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text('기출 25문항 · AI 해설 참고용',
                           style: AppText.caption
                               .copyWith(color: c.textSecondary)),
                     ],

@@ -11,11 +11,13 @@ import 'type_badge.dart';
 class QuestionCard extends StatelessWidget {
   final QuestionType type;
   final String stem;
+  final String? imageAsset;
 
   const QuestionCard({
     super.key,
     required this.type,
     required this.stem,
+    this.imageAsset,
   });
 
   @override
@@ -27,6 +29,13 @@ class QuestionCard extends StatelessWidget {
         TypeBadge(type: type),
         const SizedBox(height: AppSpacing.md + 2),
         Text(stem, style: AppText.stem.copyWith(color: c.textPrimary)),
+        if (imageAsset != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Image.asset(imageAsset!, fit: BoxFit.contain),
+          ),
+        ],
       ],
     );
   }

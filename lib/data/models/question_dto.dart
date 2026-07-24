@@ -15,6 +15,7 @@ class QuestionDto {
       explanation: json['explanation'] as String,
       difficulty: (json['difficulty'] as String?) ?? 'v3',
       tags: (json['tags'] as List?)?.cast<String>() ?? const <String>[],
+      imageAsset: json['imageAsset'] as String?,
       breakdown: (json['breakdown'] as List?)
               ?.map((e) => _verdictFromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -39,6 +40,7 @@ class QuestionDto {
       'explanation': q.explanation,
       'difficulty': q.difficulty,
       'tags': q.tags,
+      'imageAsset': q.imageAsset,
       'breakdown': [
         for (final b in q.breakdown)
           {'label': b.label, 'correct': b.correct, 'note': b.note},
