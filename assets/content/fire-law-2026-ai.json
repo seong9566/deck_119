@@ -32,7 +32,12 @@
       ],
       "breakdown": [],
       "source": "ai",
-      "imageAsset": "assets/content/images/fire-law-2026-1.png"
+      "choiceImages": [
+        "assets/content/images/fire-law-2026-1-opt1.png",
+        "assets/content/images/fire-law-2026-1-opt2.png",
+        "assets/content/images/fire-law-2026-1-opt3.png",
+        "assets/content/images/fire-law-2026-1-opt4.png"
+      ]
     },
     {
       "id": "fire-law-2026-2",

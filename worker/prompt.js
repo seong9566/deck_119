@@ -5,14 +5,23 @@ const path = require('path');
 // 그라운딩 시드 = 앱 번들 뱅크(같은 repo). 백엔드 비공개 원칙상 원문은 노출 안 하고
 // 스타일·난이도 기준(few-shot)으로만 쓴다(ADR-0002).
 const BANK_PATH = path.join(__dirname, '..', 'assets', 'content', 'fire-law.json');
+// 실제 2026 기출 참고 세트도 시드에 합친다(진짜 기출 문장·난이도 그라운딩).
+const AI_REF_PATH = path.join(__dirname, '..', 'assets', 'content', 'fire-law-2026-ai.json');
 
 function loadBank() {
-  const json = JSON.parse(fs.readFileSync(BANK_PATH, 'utf-8'));
-  return json.questions;
+  const bank = JSON.parse(fs.readFileSync(BANK_PATH, 'utf-8')).questions;
+  const aiRef = JSON.parse(fs.readFileSync(AI_REF_PATH, 'utf-8')).questions
+      // 그림형(선택지 이미지)은 텍스트 few-shot로 부적합 → 제외.
+      .filter((q) => !(q.choiceImages && q.choiceImages.length))
+      // 해설의 '(ai 생성)' 접두는 시드로 새어들지 않게 제거.
+      .map((q) => ({ ...q, explanation: q.explanation.replace(/^\(ai 생성\)\s*/, '') }));
+  return [...bank, ...aiRef];
 }
 
 function filterByYear(all, scope) {
   if (scope === 'all') return all;
+  // 2026 소방공채 기출문제 = 실제 기출 참고 세트(source='ai')만 시드로.
+  if (scope === 'gichul-2026') return all.filter((q) => q.source === 'ai');
   const y = scope === '2025' ? 2025 : 2026;
   return all.filter((q) => q.year === y);
 }

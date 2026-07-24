@@ -64,6 +64,6 @@ launchctl load -w ~/Library/LaunchAgents/com.seong.deck119.worker.plist
 
 ## 참고
 
-- 시드 = 앱 번들 `../assets/content/fire-law.json`(별도 사본 없음).
+- 시드 = 앱 번들 `../assets/content/fire-law.json` + 실제 2026 기출 참고 세트 `../assets/content/fire-law-2026-ai.json`(그림형 제외). 별도 사본 없음.
 - CLI 출력 JSON 파싱은 API 구조화출력보다 덜 안정적 → 실패 시 doc `status=error`로 기록, 앱은 에러 표시.
 - 파킹된 대안 경로: `../functions/`(Firebase Functions + 유료 API). 현재 미사용.
