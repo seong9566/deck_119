@@ -57,23 +57,35 @@ const List<LawCategory> lawCategories = [
 const LawCategory allCategory =
     LawCategory(id: kFireLawSubjectId, name: '전체', group: '전체');
 
-/// 소방시설법 태그 변형(오탈자 포함).
-const Set<String> _sisulTags = {
-  '소방시설 설치 및 관리에 관한 법률',
-  '소방시설 설치 및 관리에 관한 법',
-  '소방시설 설치 및 안전관리에 관한 법',
-  '소방시설의 설치 및 관리에 관한 법률',
+/// 법령 태그(정식명·축약형 모두) → 카테고리 id. 검수본은 정식명, 2026 AI 참고
+/// 세트는 축약형을 써서 양쪽을 함께 매핑한다(검수본엔 축약형이 없어 충돌 없음).
+const Map<String, String> _lawTagToCat = {
+  '소방기본법': catGibon,
+  '화재의 예방 및 안전관리에 관한 법률': catYebang,
+  '화재예방법': catYebang,
+  '소방시설 설치 및 관리에 관한 법률': catSisul,
+  '소방시설 설치 및 관리에 관한 법': catSisul,
+  '소방시설 설치 및 안전관리에 관한 법': catSisul,
+  '소방시설의 설치 및 관리에 관한 법률': catSisul,
+  '소방시설법': catSisul,
+  '소방시설공사업법': catGongsa,
+  '공사업법': catGongsa,
+  '위험물안전관리법': catWiheom,
+  '위험물법': catWiheom,
+  '소방의 화재조사에 관한 법률': catJosa,
+  '화재조사법': catJosa,
 };
 
-/// 문항 → 카테고리 id (정확히 1개). 우선순위: 교차 → 각 법령 → 심화 OX·계산.
+/// 문항 → 카테고리 id (정확히 1개). 교차법령 태그가 있거나 서로 다른 법령이
+/// 2개 이상이면 교차, 정확히 1개면 그 법령, 없으면 심화 OX·계산.
 String classifyCategoryId(Question q) {
   final tags = q.tags;
-  if (tags.contains('교차법령')) return catCross;
-  if (tags.contains('소방기본법')) return catGibon;
-  if (tags.contains('화재의 예방 및 안전관리에 관한 법률')) return catYebang;
-  if (tags.any(_sisulTags.contains)) return catSisul;
-  if (tags.contains('소방시설공사업법')) return catGongsa;
-  if (tags.contains('위험물안전관리법')) return catWiheom;
-  if (tags.contains('소방의 화재조사에 관한 법률')) return catJosa;
+  final laws = <String>{};
+  for (final t in tags) {
+    final cat = _lawTagToCat[t];
+    if (cat != null) laws.add(cat);
+  }
+  if (tags.contains('교차법령') || laws.length >= 2) return catCross;
+  if (laws.length == 1) return laws.first;
   return catSimhwaEtc;
 }

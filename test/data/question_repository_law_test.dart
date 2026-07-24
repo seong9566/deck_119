@@ -17,18 +17,19 @@ void main() {
         ['소방기본법', '화재예방법', '소방시설법', '소방공사업법', '위험물안전관리법', '화재조사법']);
     expect(etc.map((c) => c.name).toList(), ['교차법령', '심화 OX·계산']);
     expect(all.single.name, '전체');
-    expect(all.single.count, 333);
+    // 검수본 333 + 2026 실제 기출 25 = 358.
+    expect(all.single.count, 358);
 
     final byId = {for (final c in cats) c.id: c.count};
-    expect(byId[catGibon], 46);
-    expect(byId[catSisul], 71);
-    expect(byId[catCross], 39);
-    expect(byId[catSimhwaEtc], 18);
+    expect(byId[catGibon], 49); // 46 + 3
+    expect(byId[catSisul], 77); // 71 + 6
+    expect(byId[catCross], 42); // 39 + 3
+    expect(byId[catSimhwaEtc], 18); // 참고 세트는 모두 법령 분류됨(변화 없음)
   });
 
   test('getQuestions(법령): 여러 연도(원형+심화) 병합', () async {
     final qs = await repo.getQuestions(catGibon);
-    expect(qs.length, 46);
+    expect(qs.length, 49);
     // 원형(src:eduwill-mock 있음)과 심화(없음)가 함께 포함됨.
     expect(qs.any((q) => q.tags.contains('src:eduwill-mock')), isTrue);
     expect(qs.any((q) => !q.tags.contains('src:eduwill-mock')), isTrue);
@@ -36,6 +37,6 @@ void main() {
 
   test('getQuestions(전체): 과목 전체', () async {
     final qs = await repo.getQuestions(kFireLawSubjectId);
-    expect(qs.length, 333);
+    expect(qs.length, 358);
   });
 }
