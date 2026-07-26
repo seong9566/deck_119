@@ -53,12 +53,16 @@ class ChoiceTile extends StatelessWidget {
   final ChoiceVariant variant;
   final VoidCallback? onTap;
 
+  /// 그림형 선택지의 도표 에셋(null이면 label 텍스트로 렌더). MC 전용.
+  final String? imageAsset;
+
   const ChoiceTile({
     super.key,
     required this.label,
     required this.status,
     this.variant = ChoiceVariant.mc,
     this.onTap,
+    this.imageAsset,
   });
 
   @override
@@ -90,18 +94,33 @@ class ChoiceTile extends StatelessWidget {
                 constraints: const BoxConstraints(minHeight: 56),
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg, vertical: 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(label,
-                          style: AppText.choice.copyWith(color: t.fg)),
-                    ),
-                    if (_mcIndicator(c) case final w?) ...[
-                      const SizedBox(width: AppSpacing.md),
-                      w,
-                    ],
-                  ],
-                ),
+                // 그림형: 인디케이터를 Stack 오버레이로 띄워 이미지 위치를 고정
+                // (Row로 두면 채점 후 인디케이터 폭만큼 이미지가 밀림).
+                child: imageAsset != null
+                    ? Stack(
+                        children: [
+                          SizedBox(
+                            height: 220,
+                            width: double.infinity,
+                            child:
+                                Image.asset(imageAsset!, fit: BoxFit.contain),
+                          ),
+                          if (_mcIndicator(c) case final w?)
+                            Positioned(top: 0, right: 0, child: w),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Text(label,
+                                style: AppText.choice.copyWith(color: t.fg)),
+                          ),
+                          if (_mcIndicator(c) case final w?) ...[
+                            const SizedBox(width: AppSpacing.md),
+                            w,
+                          ],
+                        ],
+                      ),
               ),
             ),
           ),

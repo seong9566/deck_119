@@ -16,6 +16,8 @@ class QuestionDto {
       difficulty: (json['difficulty'] as String?) ?? 'v3',
       tags: (json['tags'] as List?)?.cast<String>() ?? const <String>[],
       imageAsset: json['imageAsset'] as String?,
+      choiceImages:
+          (json['choiceImages'] as List?)?.cast<String>() ?? const <String>[],
       breakdown: (json['breakdown'] as List?)
               ?.map((e) => _verdictFromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -41,6 +43,7 @@ class QuestionDto {
       'difficulty': q.difficulty,
       'tags': q.tags,
       'imageAsset': q.imageAsset,
+      'choiceImages': q.choiceImages,
       'breakdown': [
         for (final b in q.breakdown)
           {'label': b.label, 'correct': b.correct, 'note': b.note},

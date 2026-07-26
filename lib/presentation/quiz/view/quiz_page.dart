@@ -375,6 +375,7 @@ class _QuestionView extends ConsumerWidget {
           ChoiceTile(
             label: q.choices[i],
             status: _statusFor(i, q),
+            imageAsset: i < q.choiceImages.length ? q.choiceImages[i] : null,
             onTap: tappable ? () => vm.select(i) : null,
           ),
       ],

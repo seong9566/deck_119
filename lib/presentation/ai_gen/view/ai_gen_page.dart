@@ -22,7 +22,7 @@ class AiGenPage extends ConsumerStatefulWidget {
 
 class _AiGenPageState extends ConsumerState<AiGenPage> {
   static const _count = 10; // 한 번에 10문항 고정
-  String _year = 'all'; // "2025" | "2026" | "all"
+  String _year = 'all'; // "2025" | "2026" | "all" | "gichul-2026"(2026 소방공채 기출)
   String _type = 'mcq'; // "mcq" | "ox" | "mixed"
 
   void _snack(String msg) {
@@ -96,6 +96,8 @@ class _AiGenPageState extends ConsumerState<AiGenPage> {
                     ],
                     selected: _year,
                     onSelect: (v) => setState(() => _year = v),
+                    // 라벨이 길어 한 줄 폭에 안 맞는 기출 옵션은 아래 전체폭으로.
+                    fullWidthOption: const ('gichul-2026', '2026 소방공채 기출문제'),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   _OptionGroup(
@@ -180,11 +182,15 @@ class _OptionGroup extends StatelessWidget {
   final List<(String, String)> options; // (value, label)
   final String selected;
   final ValueChanged<String> onSelect;
+
+  /// 한 줄 폭에 안 맞는 긴 옵션(예: 기출) — 있으면 pill 행 아래 전체폭으로 추가.
+  final (String, String)? fullWidthOption;
   const _OptionGroup({
     required this.label,
     required this.options,
     required this.selected,
     required this.onSelect,
+    this.fullWidthOption,
   });
 
   @override
@@ -210,6 +216,17 @@ class _OptionGroup extends StatelessWidget {
             ],
           ],
         ),
+        if (fullWidthOption case (final value, final text)) ...[
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: _Pill(
+              text: text,
+              selected: value == selected,
+              onTap: () => onSelect(value),
+            ),
+          ),
+        ],
       ],
     );
   }

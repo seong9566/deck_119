@@ -39,6 +39,10 @@ class Question {
   /// 문항 도표/그림 에셋 경로(null이면 없음).
   final String? imageAsset;
 
+  /// 선택지별 그림 에셋 경로(그림형 문항). choices와 같은 길이·순서.
+  /// 비어 있으면 텍스트 선택지. 값이 있으면 해당 인덱스 선택지를 이미지로 렌더.
+  final List<String> choiceImages;
+
   /// 개수형 보기별 판정(비어 있으면 일반 문항 → 해설은 단일 텍스트로 렌더).
   final List<StatementVerdict> breakdown;
 
@@ -57,6 +61,7 @@ class Question {
     required this.difficulty,
     required this.tags,
     this.imageAsset,
+    this.choiceImages = const [],
     this.breakdown = const [],
     this.source = QuestionSource.bundled,
   });

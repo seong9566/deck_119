@@ -11,7 +11,17 @@ class QuestionRepositoryImpl implements QuestionRepository {
 
   QuestionRepositoryImpl(this._content);
 
-  Future<ContentBundle> _bundle() async => _cache ??= await _content.load();
+  /// 검수본(fire-law.json)에 2026 실제 기출(fire-law-2026-ai.json)을 합친 문제풀.
+  /// 후자는 지문·정답이 실제 기출이라 법령 카테고리에 함께 녹여 채점·통계 대상에 포함한다.
+  Future<ContentBundle> _bundle() async {
+    if (_cache != null) return _cache!;
+    final base = await _content.load();
+    final aiRef = await _content.loadAiReference();
+    return _cache = ContentBundle(
+      subject: base.subject,
+      questions: [...base.questions, ...aiRef],
+    );
+  }
 
   @override
   Future<List<Subject>> getSubjects() async => [(await _bundle()).subject];

@@ -36,8 +36,23 @@ void main() {
       }
     });
 
+    test('축약형 태그(2026 참고 세트) → 해당 법령 카테고리', () {
+      expect(classifyCategoryId(_q(['화재예방법'])), 'fire-law::law:yebang');
+      expect(classifyCategoryId(_q(['소방시설법'])), 'fire-law::law:sisul');
+      expect(classifyCategoryId(_q(['공사업법'])), 'fire-law::law:gongsa');
+      expect(classifyCategoryId(_q(['위험물법'])), 'fire-law::law:wiheom');
+      expect(classifyCategoryId(_q(['화재조사법'])), 'fire-law::law:josa');
+    });
+
     test('교차법령 태그 → 교차 카테고리', () {
       expect(classifyCategoryId(_q(['교차법령'])), 'fire-law::cross');
+    });
+
+    test('법령 태그 2개 이상 → 교차(명시 태그 없어도)', () {
+      expect(classifyCategoryId(_q(['소방기본법', '소방시설법', '화재예방법'])),
+          'fire-law::cross');
+      expect(
+          classifyCategoryId(_q(['화재예방법', '소방시설법'])), 'fire-law::cross');
     });
 
     test('법령·교차 태그 없음 → 심화 OX·계산', () {
