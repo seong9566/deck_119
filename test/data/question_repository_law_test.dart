@@ -1,11 +1,47 @@
 import 'package:deck_119/data/content/law_category_catalog.dart';
 import 'package:deck_119/data/datasources/content_data_source.dart';
 import 'package:deck_119/data/repositories/question_repository_impl.dart';
+import 'package:deck_119/domain/entities/question.dart';
+import 'package:deck_119/domain/entities/subject.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// 검수본 로드는 성공하지만 참고 세트 로드가 실패하는 데이터소스 더블.
+class _AiRefFailsDataSource extends ContentDataSource {
+  @override
+  Future<ContentBundle> load() async => ContentBundle(
+        subject: const Subject(id: 'fire-law', name: '소방관계법규'),
+        questions: [
+          const Question(
+            id: 'base-1',
+            subjectId: 'fire-law',
+            type: QuestionType.mcq,
+            year: 2025,
+            stem: 's',
+            choices: ['a', 'b'],
+            answerIndex: 0,
+            explanation: 'e',
+            difficulty: 'v3',
+            tags: ['소방기본법'],
+          ),
+        ],
+      );
+
+  @override
+  Future<List<Question>> loadAiReference() async =>
+      throw Exception('참고 세트 손상');
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final repo = QuestionRepositoryImpl(ContentDataSource());
+
+  test('참고 세트 로드 실패해도 검수본만으로 동작한다(전파 안 함)', () async {
+    final r = QuestionRepositoryImpl(_AiRefFailsDataSource());
+    final qs = await r.getQuestions(kFireLawSubjectId);
+    expect(qs, hasLength(1)); // base만 유지, 예외 전파 없음
+    final cats = await r.getCategories();
+    expect(cats.any((c) => c.id == catGibon), isTrue);
+  });
 
   test('getCategories: 법령 6 + 기타 2 + 전체 1, 순서·count', () async {
     final cats = await repo.getCategories();

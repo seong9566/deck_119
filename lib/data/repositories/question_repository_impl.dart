@@ -13,10 +13,16 @@ class QuestionRepositoryImpl implements QuestionRepository {
 
   /// 검수본(fire-law.json)에 2026 실제 기출(fire-law-2026-ai.json)을 합친 문제풀.
   /// 후자는 지문·정답이 실제 기출이라 법령 카테고리에 함께 녹여 채점·통계 대상에 포함한다.
+  /// 참고 세트 로드 실패(부재·손상)는 삼켜 검수본만으로 계속 동작한다.
   Future<ContentBundle> _bundle() async {
     if (_cache != null) return _cache!;
     final base = await _content.load();
-    final aiRef = await _content.loadAiReference();
+    List<Question> aiRef;
+    try {
+      aiRef = await _content.loadAiReference();
+    } catch (_) {
+      aiRef = const [];
+    }
     return _cache = ContentBundle(
       subject: base.subject,
       questions: [...base.questions, ...aiRef],
