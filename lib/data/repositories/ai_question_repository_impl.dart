@@ -97,7 +97,8 @@ class AiQuestionRepositoryImpl implements AiQuestionRepository {
     required String yearScope,
   }) {
     final rawList = (data['questions'] as List?) ?? const [];
-    final year = int.tryParse(yearScope); // "all" → null
+    // "all" → null. "gichul-2026"(2026 소방공채 기출 시드)은 2026으로 매핑.
+    final year = yearScope == 'gichul-2026' ? 2026 : int.tryParse(yearScope);
     return [
       for (var i = 0; i < rawList.length; i++)
         _toQuestion(

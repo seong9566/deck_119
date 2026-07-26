@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "_readme": {
     "source": "2026년 소방공무원 공채 소방관계법규(2026-03-07 시행) 시험지에서 추출",
-    "note": "해설은 모두 AI 생성('(ai 생성)' 접두)·미검수 참고용. 정답은 사용자 제공값(1-based→0-based 변환). 1~25번 전체 수록. 1번은 선택지가 벤다이어그램(그림)이라 imageAsset(assets/content/images/fire-law-2026-1.png)로 담고 choices는 ①~④ 라벨. source='ai'. 앱 로더(content_data_source.dart)는 fire-law.json만 읽으므로 이 파일은 자동 로드되지 않음."
+    "note": "정답·지문은 실제 기출, 해설은 AI 생성('(ai 생성)' 접두). 정답은 사용자 제공값(1-based→0-based 변환). 1~25번 전체 수록. 1번은 선택지가 벤다이어그램(그림)이라 choiceImages(assets/content/images/fire-law-2026-1-opt1~4.png) 4개로 담고 choices는 ①~④ 라벨. source='ai'. QuestionRepositoryImpl이 fire-law.json에 이 파일을 합쳐 자동 로드하며, 과목탭 각 법령 카운트에 포함되고 일반 문항처럼 채점·통계·오답 대상이다. 워커(worker/prompt.js)는 이 세트를 AI 생성 시드로도 사용한다(그림형 1번 제외)."
   },
   "subject": {
     "id": "fire-law",
