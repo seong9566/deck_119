@@ -6,6 +6,7 @@
 
 - **`docs/BUILD_PLAN.md`** = MVP 빌드의 단일 진실원. 확정 결정·영속화 스펙·화면 정의서·태스크(DoD)·검증 런북·가드레일이 전부 있다. 작업 전 반드시 읽고 그 순서대로 진행한다.
 - 상위 맥락(왜)이 필요하면 vault: `~/Desktop/obsidian_workspace/personal_dev_wiki/wiki/projects/소방-기출앱/` (PRD·ADR-0001·architecture).
+- **배포·worker**: 배포는 Firebase App Distribution 단일 경로(**TestFlight 미사용**). 재현 명령·Firebase 앱 ID·테스터·iOS ad-hoc UDID 제약·worker 재기동은 `docs/BUILD_LOG.md` §배포 기록 참조 — 탐색으로 재발견하지 말 것.
 
 ## 핵심 규칙
 

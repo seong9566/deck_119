@@ -174,8 +174,13 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 
 **주의(iOS ad-hoc)**: 프로비저닝 프로파일(`iOS Team Ad Hoc Provisioning Profile: com.hyeonseong.fireDeck`, 만료 2027-07-17)에 등록된 **UDID 5대에서만** 설치된다. 미등록 기기는 배포 메일을 받아도 설치가 실패하므로 테스터 추가 시 기기 등록 → 프로파일 재발급 → 재빌드가 필요하다. Android는 이 제약이 없다.
 
-**미확인(정직 보고)**: 테스터 2명(재성 김)의 기기가 위 5대에 포함되는지는 확인하지 않았다. 설치 실패 보고가 오면 위 절차를 따른다.
+**기기 등록 확인**: 테스터 2명(재성 김)의 기기는 위 5대에 포함되어 있다(사용자 확인 2026-07-27). 이후 **새 테스터**를 추가할 때만 위 재발급 절차가 필요하다.
 
 **빌드 부산물 주의**: `flutter build ipa`가 `ios/Runner.xcodeproj/project.pbxproj`의 `objectVersion`을 60 → 54로 되쓴다. 요청과 무관한 변경이므로 배포 후 `git checkout --`로 되돌린다.
 
 **로컬 worker**: 배포 후 재기동 = `launchctl kickstart -k gui/$(id -u)/com.seong.deck119.worker`. 로그 `~/Library/Logs/deck119-worker.log`, 기동 로그 문구 `worker up (claude→codex 폴백). watching gen_requests(status=pending)…`.
+
+### 운영 결정 (2026-07-27, 사용자 확정)
+
+- **테스터 그룹은 만들지 않는다** — 3명 규모라 `--testers`에 이메일을 나열하는 현 방식으로 충분. 인원이 늘면 그때 그룹 도입을 재검토.
+- **Play 스토어 출시 계획 없음** — 따라서 Android release가 debug 키로 서명되는 현 상태(`android/app/build.gradle.kts` release 블록의 TODO)를 그대로 둔다. 출시가 정해지면 keystore 발급 → `android/key.properties` 구성 → release signingConfig 교체가 선행 과제.
