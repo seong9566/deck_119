@@ -148,3 +148,34 @@
 **할 일**: 추후 iOS·Android 번들 ID를 **하나로 통일**한다(iOS 기준으로 맞추거나 단일 번들로 정리 — 방향은 착수 시 확정).
 
 **주의(통일 시 파급)**: 번들 ID 변경은 Firebase 앱 재등록(google-services.json·GoogleService-Info.plist 교체), App Distribution 앱/릴리스 새로 생성, iOS 프로비저닝 프로파일 재발급, 스토어 등록(App Store/Play Console) 시 앱 식별자 영향까지 연쇄됨. 배포 이력·테스터 그룹이 새 번들로 이관되어야 하므로 배포 공백을 감안해 계획적으로 진행.
+
+## 배포 기록 — 1.0.0+2 (2026-07-27)
+
+PR #6~#11 반영분을 iOS·Android 동시 배포. **배포 경로는 Firebase App Distribution 단일 — TestFlight는 쓰지 않는다**(사용자 결정 2026-07-27).
+
+- **버전**: `1.0.0+2` (직전 배포 `1.0.0+1`, 2026-07-20)
+- **iOS**: ad-hoc 서명 IPA 16MB · Firebase 앱 `1:771540934251:ios:6467ee8681bd69fd1d1b2e`
+- **Android**: release APK 61MB(**debug 키 서명** — Play 스토어엔 부적합) · Firebase 앱 `1:771540934251:android:53eca952be5c43d41d1b2e`
+- **테스터**: 그룹이 없어 `--testers`로 3명 직접 지정 (`dlgustjd9566@gmail.com`, `earthlm5@naver.com`, `wotjd716400@gmail.com`)
+- **게이트**: `flutter analyze` 0건 · `flutter test` 83개 통과
+
+**재현 명령**
+
+```bash
+flutter build ipa --release --export-method ad-hoc
+flutter build apk --release
+firebase appdistribution:distribute build/ios/ipa/deck_119.ipa \
+  --app 1:771540934251:ios:6467ee8681bd69fd1d1b2e \
+  --release-notes-file <notes> --testers "<emails>" --project deck-119
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+  --app 1:771540934251:android:53eca952be5c43d41d1b2e \
+  --release-notes-file <notes> --testers "<emails>" --project deck-119
+```
+
+**주의(iOS ad-hoc)**: 프로비저닝 프로파일(`iOS Team Ad Hoc Provisioning Profile: com.hyeonseong.fireDeck`, 만료 2027-07-17)에 등록된 **UDID 5대에서만** 설치된다. 미등록 기기는 배포 메일을 받아도 설치가 실패하므로 테스터 추가 시 기기 등록 → 프로파일 재발급 → 재빌드가 필요하다. Android는 이 제약이 없다.
+
+**미확인(정직 보고)**: 테스터 2명(재성 김)의 기기가 위 5대에 포함되는지는 확인하지 않았다. 설치 실패 보고가 오면 위 절차를 따른다.
+
+**빌드 부산물 주의**: `flutter build ipa`가 `ios/Runner.xcodeproj/project.pbxproj`의 `objectVersion`을 60 → 54로 되쓴다. 요청과 무관한 변경이므로 배포 후 `git checkout --`로 되돌린다.
+
+**로컬 worker**: 배포 후 재기동 = `launchctl kickstart -k gui/$(id -u)/com.seong.deck119.worker`. 로그 `~/Library/Logs/deck119-worker.log`, 기동 로그 문구 `worker up (claude→codex 폴백). watching gen_requests(status=pending)…`.
