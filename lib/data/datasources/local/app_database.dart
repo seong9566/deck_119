@@ -28,11 +28,16 @@ class WrongEntries extends Table {
   Set<Column> get primaryKey => {questionId};
 }
 
-/// 이어풀기 세션(normal 한정). key = `"$categoryId:normal"`.
+/// 이어풀기 세션(모드별). key = `"$categoryId:$mode"`.
 /// [answers]는 문항별 선택 인덱스(-1 = 미응답)를 CSV로 직렬화해 보관.
+/// [questionIds]는 출제된 문항 id 목록(JSON 배열) — random·quick·review처럼
+/// 세트가 매번 달라지는 모드를 같은 순서로 복원하려면 목록 자체가 필요하다.
+/// 빈 문자열이면 저장소 순서를 그대로 쓴다(v4 이전 세션 하위호환).
 class Sessions extends Table {
   TextColumn get key => text()();
   TextColumn get subjectId => text()();
+  TextColumn get mode => text().withDefault(const Constant('normal'))();
+  TextColumn get questionIds => text().withDefault(const Constant(''))();
   IntColumn get lastIndex => integer()();
   TextColumn get answers => text()();
   IntColumn get updatedAtMs => integer()();
@@ -80,6 +85,20 @@ class PendingAiRequests extends Table {
   Set<Column> get primaryKey => {docId};
 }
 
+/// AI 생성 문항의 풀이 기록. questionId 유일(재응답 시 덮어씀).
+/// 통계·오답노트(AttemptRecords·WrongEntries)와 분리해 합성 id가 기출 지표를
+/// 오염시키지 않게 한다(ADR-0002). AI 문제함의 "이미 푼 문항" 판정 원천.
+class AiAnswers extends Table {
+  TextColumn get questionId => text()();
+  TextColumn get subjectId => text()();
+  IntColumn get selectedIndex => integer()();
+  BoolColumn get isCorrect => boolean()();
+  IntColumn get answeredAtMs => integer()();
+
+  @override
+  Set<Column> get primaryKey => {questionId};
+}
+
 @DriftDatabase(tables: [
   AttemptRecords,
   WrongEntries,
@@ -87,6 +106,7 @@ class PendingAiRequests extends Table {
   Settings,
   GeneratedQuestions,
   PendingAiRequests,
+  AiAnswers,
 ])
 class AppDatabase extends _$AppDatabase {
   /// 앱 실행용(문서 디렉터리에 deck119.sqlite).
@@ -96,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -108,6 +128,13 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) await m.createTable(pendingAiRequests);
           // v4: 분류를 법령 카테고리로 재편 → 구 키 세션 클리어(T20).
           if (from < 4) await customStatement('DELETE FROM sessions');
+          // v5: 세션을 전 모드로 확장 + AI 풀이 기록 테이블 추가.
+          // 기존 행은 key가 이미 ":normal"이라 mode 기본값과 일치 → 삭제하지 않는다.
+          if (from < 5) {
+            await m.addColumn(sessions, sessions.mode);
+            await m.addColumn(sessions, sessions.questionIds);
+            await m.createTable(aiAnswers);
+          }
         },
       );
 }

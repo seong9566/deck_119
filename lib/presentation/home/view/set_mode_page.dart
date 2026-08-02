@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../domain/entities/quiz_mode.dart';
 import '../../../domain/entities/resume_info.dart';
 import '../../app_router.dart';
+import '../../quiz/view/quiz_page.dart' show modeTitle;
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
@@ -21,7 +22,8 @@ class SetModePage extends ConsumerWidget {
 
   Future<void> _open(BuildContext context, WidgetRef ref, QuizMode mode,
       {bool resume = false}) async {
-    final link = mode == QuizMode.exam
+    // /exam 라우트는 resume을 받지 않는다 → 시험 이어풀기는 /quiz로 보낸다.
+    final link = mode == QuizMode.exam && !resume
         ? Routes.examLink(collectionId)
         : Routes.quizLink(collectionId, mode, resume: resume);
     await context.push(link);
@@ -64,7 +66,8 @@ class SetModePage extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md + 2),
               _ContinueTile(
                 resume: resume,
-                onTap: () => _open(context, ref, QuizMode.normal, resume: true),
+                // 저장된 세션의 모드로 되돌아가야 그 세트가 그대로 복원된다.
+                onTap: () => _open(context, ref, resume.mode, resume: true),
               ),
             ],
             Padding(
@@ -185,7 +188,7 @@ class _ContinueTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('이어풀기',
+                      Text('이어풀기 · ${modeTitle(resume.mode)}',
                           style: AppText.label.copyWith(
                               color: c.brandInk, letterSpacing: 0.9)),
                       const SizedBox(height: 2),

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../di.dart';
+import '../../../domain/entities/ai_quiz_set.dart';
 import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/quiz_mode.dart';
 import '../../ai_gen/viewmodel/ai_generation_controller.dart';
 import '../../ai_gen/viewmodel/ai_gen_view_model.dart';
 import '../../app_router.dart';
+import '../../quiz/view/quiz_page.dart' show modeTitle;
 import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/app_radius_shape.dart';
 import '../../shared/theme/app_spacing.dart';
@@ -28,8 +30,9 @@ class HomePage extends ConsumerWidget {
 
   Future<void> _openResume(
       BuildContext context, WidgetRef ref, RecentSessionCard card) async {
-    await context.push(
-        Routes.quizLink(card.collectionId, QuizMode.normal, resume: true));
+    // 세션이 어떤 모드였든 그 모드로 되돌아가야 저장된 세트가 복원된다.
+    await context
+        .push(Routes.quizLink(card.collectionId, card.mode, resume: true));
     _refresh(ref, card.collectionId);
   }
 
@@ -39,13 +42,23 @@ class HomePage extends ConsumerWidget {
     _refresh(ref, categoryId);
   }
 
-  /// AI 문제함 재풀이 — 누적 문항을 DB에서 로드해 핸드오프 홀더에 주입 후 ai 모드로.
+  /// AI 문제함 재풀이 — 누적 문항 + 기존 응답을 합쳐 핸드오프 홀더에 주입 후 ai 모드로.
+  /// 이미 푼 문항이 있으면 이어풀기/처음부터를 먼저 묻는다.
   Future<void> _openAiBank(BuildContext context, WidgetRef ref) async {
     const subjectId = 'fire-law';
-    final questions =
-        await ref.read(generatedQuestionRepositoryProvider).getAll(subjectId);
-    if (questions.isEmpty || !context.mounted) return;
-    ref.read(generatedQuestionsProvider.notifier).state = questions;
+    var set = await ref.read(getAiQuizSetProvider)(subjectId);
+    if (set.isEmpty || !context.mounted) return;
+
+    if (set.solvedCount > 0) {
+      final choice = await _askAiStart(context, set);
+      if (choice == null || !context.mounted) return;
+      if (choice == _AiStart.restart) {
+        await ref.read(resetAiAnswersProvider)(subjectId);
+        set = set.reset;
+      }
+    }
+    if (!context.mounted) return;
+    ref.read(aiQuizSetProvider.notifier).state = set;
     await context.push(Routes.quizLink(subjectId, QuizMode.ai));
   }
 
@@ -80,6 +93,8 @@ class HomePage extends ConsumerWidget {
                 ref.watch(progressStatsProvider).valueOrNull ?? ProgressStats.empty;
             final wrongCount = ref.watch(wrongCountProvider).valueOrNull ?? 0;
             final aiBankCount = ref.watch(aiBankCountProvider).valueOrNull ?? 0;
+            final aiUnsolvedCount =
+                ref.watch(aiUnsolvedCountProvider).valueOrNull ?? 0;
             // 홈 진입 시 회수 안전망 실행(타임아웃으로 못 받았던 완료분 흡수).
             ref.watch(aiRecoveryProvider);
             final recent = ref.watch(recentSessionCardProvider).valueOrNull;
@@ -146,6 +161,7 @@ class HomePage extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.md),
                   _AiBankEntry(
                     count: aiBankCount,
+                    unsolved: aiUnsolvedCount,
                     onTap: () => _openAiBank(context, ref),
                   ),
                 ],
@@ -171,6 +187,48 @@ class HomePage extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// AI 문제함 시작 방식.
+enum _AiStart { resume, restart }
+
+/// 이어풀기/처음부터 확인. 이미 다 푼 상태면 이어풀기 선택지를 숨긴다.
+Future<_AiStart?> _askAiStart(BuildContext context, AiQuizSet set) {
+  final c = context.colors;
+  final allSolved = set.unsolvedCount == 0;
+  return showDialog<_AiStart>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: c.surface,
+      title: Text(allSolved ? '문제를 모두 풀었어요' : '이어서 풀까요?',
+          style: AppText.choice
+              .copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+      content: Text(
+        allSolved
+            ? '${set.total}문항을 모두 풀었어요.\n처음부터 다시 풀면 기존 풀이 기록은 지워져요.'
+            : '${set.total}문항 중 ${set.solvedCount}문항을 풀었어요.\n'
+                '처음부터 다시 풀면 기존 풀이 기록은 지워져요.',
+        style: AppText.caption.copyWith(color: c.textSecondary, height: 1.5),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text('닫기', style: TextStyle(color: c.textSecondary)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, _AiStart.restart),
+          child: Text('처음부터 다시', style: TextStyle(color: c.textSecondary)),
+        ),
+        if (!allSolved)
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _AiStart.resume),
+            child: Text('이어풀기',
+                style:
+                    TextStyle(color: c.brand, fontWeight: FontWeight.w700)),
+          ),
+      ],
+    ),
+  );
 }
 
 class _AiGeneratingNotice extends StatelessWidget {
@@ -253,7 +311,7 @@ class _ResumeCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('이어풀기',
+                Text('이어풀기 · ${modeTitle(card.mode)}',
                     style: AppText.label
                         .copyWith(color: c.brandInk, letterSpacing: 0.9)),
                 const SizedBox(height: AppSpacing.xs),
@@ -453,8 +511,15 @@ class _AiGenEntry extends StatelessWidget {
 /// AI 문제함 진입(홈) — 적립된 AI 문항 누적 재풀이. 1개 이상일 때만 노출.
 class _AiBankEntry extends StatelessWidget {
   final int count;
+
+  /// 아직 풀지 않은 문항 수(0이면 모두 푼 상태).
+  final int unsolved;
   final VoidCallback onTap;
-  const _AiBankEntry({required this.count, required this.onTap});
+  const _AiBankEntry({
+    required this.count,
+    required this.unsolved,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -486,7 +551,10 @@ class _AiBankEntry extends StatelessWidget {
                               color: c.textPrimary,
                               fontWeight: FontWeight.w700)),
                       const SizedBox(height: 2),
-                      Text('누적 $count문항 · 참고용',
+                      Text(
+                          unsolved > 0
+                              ? '누적 $count문항 · 미풀이 $unsolved문항'
+                              : '누적 $count문항 · 모두 풀었어요',
                           style: AppText.caption
                               .copyWith(color: c.textSecondary)),
                     ],

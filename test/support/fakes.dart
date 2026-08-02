@@ -5,8 +5,10 @@ import 'package:deck_119/domain/entities/app_theme_mode.dart';
 import 'package:deck_119/domain/entities/progress_stats.dart';
 import 'package:deck_119/domain/entities/question.dart';
 import 'package:deck_119/domain/entities/question_category.dart';
+import 'package:deck_119/domain/entities/quiz_mode.dart';
 import 'package:deck_119/domain/entities/recent_session.dart';
 import 'package:deck_119/domain/entities/subject.dart';
+import 'package:deck_119/domain/repositories/ai_answer_repository.dart';
 import 'package:deck_119/domain/repositories/ai_question_repository.dart';
 import 'package:deck_119/domain/repositories/generated_question_repository.dart';
 import 'package:deck_119/domain/repositories/progress_repository.dart';
@@ -204,36 +206,64 @@ class FakeProgressRepository implements ProgressRepository {
   }
 }
 
-/// 테스트용 인메모리 이어풀기 저장소.
+/// 테스트용 인메모리 이어풀기 저장소(카테고리 ⨯ 모드 키).
 /// watch는 실제 drift처럼 현재 스냅샷을 먼저 방출한 뒤 변이마다 갱신을 흘린다.
 class FakeSessionRepository implements SessionRepository {
-  final Map<String, ({int lastIndex, List<int?> answers})> _sessions = {};
+  final Map<({String categoryId, QuizMode mode}), SessionSnapshot> _sessions =
+      {};
+  final List<({String categoryId, QuizMode mode})> _order = [];
   final StreamController<void> _changes = StreamController<void>.broadcast();
   void _notify() {
     if (_changes.hasListener) _changes.add(null);
   }
 
   @override
-  Future<({int lastIndex, List<int?> answers})?> load(String subjectId) async =>
-      _sessions[subjectId];
+  Future<SessionSnapshot?> load(String categoryId, QuizMode mode) async =>
+      _sessions[(categoryId: categoryId, mode: mode)];
 
   @override
-  Future<void> save(String subjectId, int lastIndex, List<int?> answers) async {
-    _sessions[subjectId] = (lastIndex: lastIndex, answers: [...answers]);
+  Future<void> save(
+    String categoryId,
+    QuizMode mode, {
+    required int lastIndex,
+    required List<int?> answers,
+    required List<String> questionIds,
+  }) async {
+    final key = (categoryId: categoryId, mode: mode);
+    _sessions[key] = (
+      lastIndex: lastIndex,
+      answers: [...answers],
+      questionIds: [...questionIds],
+    );
+    _order
+      ..remove(key)
+      ..insert(0, key); // 최신이 앞
     _notify();
   }
 
   @override
-  Future<void> clear(String subjectId) async {
-    _sessions.remove(subjectId);
+  Future<void> clear(String categoryId, QuizMode mode) async {
+    final key = (categoryId: categoryId, mode: mode);
+    _sessions.remove(key);
+    _order.remove(key);
     _notify();
   }
 
   @override
-  Future<List<RecentSession>> recentSessions({int limit = 5}) async => [
-        for (final e in _sessions.entries)
-          RecentSession(
-              collectionId: e.key, lastIndex: e.value.lastIndex, updatedAtMs: 0),
+  Future<List<RecentSession>> recentSessions({
+    int limit = 5,
+    String? categoryId,
+  }) async =>
+      [
+        for (final key in _order)
+          if (categoryId == null || key.categoryId == categoryId)
+            RecentSession(
+              collectionId: key.categoryId,
+              mode: key.mode,
+              lastIndex: _sessions[key]!.lastIndex,
+              total: _sessions[key]!.questionIds.length,
+              updatedAtMs: 0,
+            ),
       ].take(limit).toList();
 
   @override
@@ -243,6 +273,46 @@ class FakeSessionRepository implements SessionRepository {
       yield await recentSessions(limit: limit);
     }
   }
+}
+
+/// 테스트용 인메모리 AI 풀이 기록 저장소.
+class FakeAiAnswerRepository implements AiAnswerRepository {
+  /// questionId → 선택 인덱스.
+  final Map<String, int> answers = {};
+  final Map<String, String> _subjects = {};
+  final StreamController<void> _changes = StreamController<void>.broadcast();
+
+  /// 미풀이 수 계산용 — 적립함의 문항 수를 테스트에서 주입한다.
+  int Function(String subjectId) bankSize = (_) => 0;
+
+  @override
+  Future<Map<String, int>> selections(String subjectId) async => {
+        for (final e in answers.entries)
+          if (_subjects[e.key] == subjectId) e.key: e.value,
+      };
+
+  @override
+  Future<void> record(Question question, int selectedIndex) async {
+    answers[question.id] = selectedIndex;
+    _subjects[question.id] = question.subjectId;
+    if (_changes.hasListener) _changes.add(null);
+  }
+
+  @override
+  Future<void> clearSubject(String subjectId) async {
+    answers.removeWhere((id, _) => _subjects[id] == subjectId);
+    if (_changes.hasListener) _changes.add(null);
+  }
+
+  @override
+  Stream<int> watchUnsolvedCount(String subjectId) async* {
+    yield bankSize(subjectId) - (await selections(subjectId)).length;
+    await for (final _ in _changes.stream) {
+      yield bankSize(subjectId) - (await selections(subjectId)).length;
+    }
+  }
+
+  void dispose() => unawaited(_changes.close());
 }
 
 /// 테스트용 인메모리 설정 저장소.

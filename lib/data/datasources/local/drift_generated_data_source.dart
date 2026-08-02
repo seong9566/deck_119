@@ -31,14 +31,15 @@ class DriftGeneratedDataSource {
     });
   }
 
-  /// 누적 문항 최신순(createdAt desc, 동일 배치는 id desc).
+  /// 누적 문항 생성순(createdAt asc, 동일 배치는 id asc).
+  /// 나중에 만든 문항이 뒤에 쌓여야 이어풀기 위치가 밀리지 않는다.
   Future<List<Question>> getAll(String subjectId) async {
     final rows = await (_db.select(_db.generatedQuestions)
           ..where((t) => t.subjectId.equals(subjectId))
           ..orderBy([
-            (t) => OrderingTerm(
-                expression: t.createdAtMs, mode: OrderingMode.desc),
-            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+            (t) =>
+                OrderingTerm(expression: t.createdAtMs, mode: OrderingMode.asc),
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
           ]))
         .get();
     return [

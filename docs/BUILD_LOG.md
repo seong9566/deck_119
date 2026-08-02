@@ -184,3 +184,56 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 
 - **테스터 그룹은 만들지 않는다** — 3명 규모라 `--testers`에 이메일을 나열하는 현 방식으로 충분. 인원이 늘면 그때 그룹 도입을 재검토.
 - **Play 스토어 출시 계획 없음** — 따라서 Android release가 debug 키로 서명되는 현 상태(`android/app/build.gradle.kts` release 블록의 TODO)를 그대로 둔다. 출시가 정해지면 keystore 발급 → `android/key.properties` 구성 → release signingConfig 교체가 선행 과제.
+
+---
+
+## 풀이 이력 영속화 v2 — AI 문제함 이력 + 전 모드 이어풀기 ✅ (2026-08-02)
+
+계획서: `docs/PLAN_resume_v2.md` (인터뷰로 확정한 결정 표 포함). 브랜치 `fix/ai-history-and-resume`.
+
+### 보고된 문제와 실제 원인
+
+두 증상은 한 뿌리 — **AI 모드에 풀이 상태를 저장하는 경로가 없었다.**
+
+1. "새로 발급하면 이전에 푼 문제가 다시 미풀이로 나온다" → 정답이 날아간 게 아니라 **애초에 저장된 적이 없다.** `quiz_view_model.dart`의 `if (arg.mode != QuizMode.ai)` 가드로 AI 문항은 `SubmitAnswer`를 타지 않았고(통계·오답노트 오염 방지 — ADR-0002), 그 결과 진입할 때마다 `index: 0` / `answers` 전부 null.
+2. "풀다가 나가면 처음부터" → 세션 저장이 `QuizMode.normal` 전용이었고 `Sessions.key`도 `"$categoryId:normal"` 하드코딩이라 다른 모드용 슬롯 자체가 없었다.
+
+부수 발견(같이 수정): 적립함 `getAll()`이 최신순이라 새 문항이 목록 맨 앞에 붙었다 → 인덱스 기반 저장은 생성할 때마다 전부 밀려 깨지므로 **questionId 기반**이 필수. `set_mode_page`의 이어풀기 타일이 세션 모드와 무관하게 항상 `normal`로 진입하던 버그, `/exam` 라우트가 `resume`을 받지 않아 시험 이어풀기가 처음부터 시작되던 문제도 함께 고쳤다.
+
+### 변경 요약
+
+- **스키마 v5**: `Sessions`에 `mode`·`questionIds` 추가(랜덤·빠른10·오답은 출제 목록 자체를 저장해야 복원됨), `AiAnswers` 테이블 신설. **기존 세션은 삭제하지 않는다**(v4의 `DELETE FROM sessions`와 달리 컬럼만 추가).
+- **AI 문제함**: `AiAnswers`가 진행 상태의 원천. 홈 진입 시 이미 푼 문항이 있으면 이어풀기(전체 목록 유지 + 첫 미풀이로 점프) / 처음부터(기록 전체 초기화)를 묻는다. 적립함 정렬은 생성순(ASC)으로 변경. 통계·오답노트는 여전히 기출만 집계.
+- **전 모드 이어풀기**: `GetQuizSession` UseCase가 세트 구성·복원을 일원화. 시험 모드는 제출 전까지 임시저장하고 제출 시 세션 삭제. 오답 재풀이는 시작 시점 목록 고정.
+- **홈·세트 화면**: 이어풀기 카드에 모드 라벨(`이어풀기 · 랜덤`)을 붙이고 그 모드로 진입. AI 문제함 카드에 `미풀이 N문항` 표시.
+- **결과 화면**: ai 모드에서는 '다시 풀기'를 숨겼다 — 시작 방식은 홈 다이얼로그가 관장하며, 그대로 두면 이미 채점된 답이 보이는 채로 재시작된다.
+
+### 검증
+
+`flutter analyze` 이슈 0 · `flutter test` **106개 통과**(작업 전 기준선 83 → +23).
+
+신규: `drift_ai_answer_test`(기록 왕복·과목별 초기화·생성순 정렬·미풀이 수 스트림), `ai_resume_flow_test`(문제 1 회귀 — 2문항 풀고 이탈 → 2문항 추가 발급 → 답 유지 + 3번부터), `get_quiz_session_test`(문항 소실 시 답·위치 보정, 전부 소실 시 세션 폐기, 구 세션 하위호환), `session_migration_test`의 v4→v5 케이스.
+확장: `resume_flow_test`(선택 즉시 저장 / 랜덤 세트 순서 복원 / 시험 임시저장·제출 시 삭제), `drift_session_test`(모드별 분리·출제 목록·카테고리 필터), `home_reactive_test`(모드 라벨 진입, AI 다이얼로그 2종).
+
+### 에뮬레이터 검증 (Android 14 / emulator-5554, 2026-08-02)
+
+**실제 v4 → v5 업그레이드 경로**로 확인했다. `main` 브랜치를 worktree에 체크아웃해 구버전 APK를 먼저 설치 → 화재조사법 세트를 3/9까지 풀어 v4 세션을 만들고(`PRAGMA user_version` = 4) → 신버전 APK를 덮어씌워 데이터를 유지한 채 재실행.
+
+| 확인 항목 | 결과 |
+|---|---|
+| 마이그레이션 | `user_version` 4 → 5, 기존 세션 행 보존(`mode='normal'`, `question_ids=''`), `ai_answers` 생성 |
+| 구 세션 이어풀기 | 홈 카드 `이어풀기 · 전체 풀이 3/9` → 탭 시 3번 문항부터 정확히 복원 |
+| 선택 즉시 저장(문제 2) | '다음'을 누르지 않고 답만 고른 뒤 이탈 → 재진입 시 선택·정답 판정·해설 그대로 복원(`answers`가 `0,0,0,…`) |
+| 모드별 세션 분리 | `:normal`(정순)과 `:random`(셔플 목록)이 각각 저장, 홈 카드는 최근 것을 `이어풀기 · 랜덤 2/9`로 표시 |
+| 랜덤 이어풀기 | 진입 시 저장된 셔플 순서의 2번째 문항부터 — 구버전에선 불가능했던 동작 |
+| AI 문제함(문제 1) | 3문항 중 2문항 풀고 이탈 → 2문항 추가 발급 → 재진입 시 "5문항 중 2문항을 풀었어요" 다이얼로그 → 이어풀기 시 **3/5**부터, '이전'으로 가면 2번 답·해설 복원 |
+| AI 처음부터 다시 | `ai_answers` 0건으로 초기화 + 1/5 미풀이 상태로 시작 |
+| 통계 오염 | AI 문항 응답 후에도 `attempt_records`에 `ai-%` 0건 — ADR-0002 유지 확인 |
+
+### 정직 보고 — 하지 않은 것
+
+- **AI 실제 생성은 돌리지 않았다.** 로컬 worker가 Firestore watch 에러로 멈춰 있어(이번 변경과 무관한 인프라 이슈) 에뮬레이터 `generated_questions`에 테스트 문항 5건을 sqlite로 직접 주입해 UI 흐름만 확인했다. 생성 → 적립 경로 자체는 이번에 건드리지 않았다.
+- **iOS 미확인.** 검증은 Android 에뮬레이터 한 대에서만 했다.
+- 에뮬레이터에는 테스트 데이터(`ai-seed-1`~`5`, 세션 2건)가 남아 있다. 지우려면 앱 데이터 삭제(`adb shell pm clear com.seong.deck119`).
+- 기존 `session_migration_test`의 v3→v4 케이스는 `onUpgrade(3, 4)`를 수동 호출하는 방식이었는데, 마이그레이션이 `to`가 아니라 `from`만 검사하는 구조라 v5 블록까지 실행돼 깨졌다. 실제 경로(v3 DB를 열면 3→5로 한 번에 간다)를 검증하도록 테스트를 다시 썼다.
+- 테스트에서 `autoDispose` 파기 타이밍이 실기와 달라, AI 재진입 테스트는 `container.invalidate(quizViewModelProvider(args))`로 화면 이탈을 모사한다.
