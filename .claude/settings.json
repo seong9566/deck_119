@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "VAULT=/Users/ihyeonseong/Desktop/obsidian_workspace/personal_dev_wiki; id=$(git branch --show-current 2>/dev/null | grep -oE 'T[0-9]+' | head -1); [ -n \"$id\" ] && bash \"$VAULT/.claude/scripts/task.sh\" wip \"$id\" --section code >/dev/null 2>&1; true"
+            "command": "VAULT=\"${TASK_VAULT:-}\"; TASK_PROJECT=소방-기출앱; id=$(git branch --show-current 2>/dev/null | grep -oE 'T[0-9]+' | head -1); [ -n \"$VAULT\" ] && [ -n \"$id\" ] && bash \"$VAULT/.claude/scripts/task.sh\" wip \"$id\" --project \"$TASK_PROJECT\" --section code >/dev/null 2>&1; true"
           }
         ]
       }

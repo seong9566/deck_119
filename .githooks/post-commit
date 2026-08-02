@@ -2,10 +2,15 @@
 # PM↔코드 태스크 라이프사이클: 커밋 trailer 'Closes: Txx' → done, 브랜치 ID → wip.
 # 소스 오브 트루스: PM vault의 wiki/projects/<project>/tasks/*.md 프론트매터.
 # 설치: git init 후 `git config core.hooksPath .githooks`
-VAULT=/Users/ihyeonseong/Desktop/obsidian_workspace/personal_dev_wiki
+# vault 경로는 기기마다 다르다 → 셸 환경변수 TASK_VAULT로 받는다. 미설정이면 아무것도 하지 않는다.
+VAULT="${TASK_VAULT:-}"
+[ -z "$VAULT" ] && exit 0
+# task ID는 vault 안에서 프로젝트별로만 유일하다(T01이 여러 프로젝트에 있다).
+# --project 없이 부르면 task.sh가 모호하다며 거부해(rc!=0) 전환이 조용히 안 된다.
+TASK_PROJECT=소방-기출앱
 msg=$(git log -1 --pretty=%B)
 for id in $(echo "$msg" | grep -oE 'Closes:[[:space:]]*T[0-9]+' | grep -oE 'T[0-9]+'); do
-  bash "$VAULT/.claude/scripts/task.sh" done "$id" >/dev/null 2>&1 || true
+  bash "$VAULT/.claude/scripts/task.sh" done "$id" --project "$TASK_PROJECT" >/dev/null 2>&1 || true
 done
 id=$(git branch --show-current 2>/dev/null | grep -oE 'T[0-9]+' | head -1)
-[ -n "$id" ] && ! echo "$msg" | grep -q 'Closes:' && bash "$VAULT/.claude/scripts/task.sh" wip "$id" --section code >/dev/null 2>&1 || true
+[ -n "$id" ] && ! echo "$msg" | grep -q 'Closes:' && bash "$VAULT/.claude/scripts/task.sh" wip "$id" --project "$TASK_PROJECT" --section code >/dev/null 2>&1 || true
