@@ -258,3 +258,26 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 **발견(미수정, 이번 범위 밖)**: `worker/index.js`의 `onSnapshot` 에러 콜백이 `console.error`만 하고 재구독하지 않는다. Firestore Node SDK는 이 콜백이 발화하는 순간 리스너를 영구 종료하므로, 한 번 발생하면 프로세스는 살아 있는 채로 요청을 영영 못 받는다(로그를 안 보면 감지 불가). 재구독 또는 주기적 pending 폴링 안전망이 필요하다.
 
 **잔여 테스트 데이터**: Firestore `gen_requests`에 이번 검증 doc 3건(`3g6luOY7eBQj3f5r99jc` 직접 투입 1건 + 앱 요청 2건). 에뮬레이터는 종료했고 앱 데이터는 그대로다.
+
+### 리뷰 반영 (PR #13, 2026-08-03)
+
+PR #13에 자동 코드리뷰(Codex adversarial)를 붙여 발견 2건을 모두 수정하고 머지했다(`d6c735c2`).
+
+- **🟠 v5 마이그레이션이 비멱등이었다**(`82b61e9`). drift의 `createTable`은 `CREATE TABLE IF NOT EXISTS`지만 `addColumn`은 맨 `ALTER TABLE ADD COLUMN`이라 재실행하면 `duplicate column`으로 실패하고, 실패가 `beforeOpen`에서 나므로 앱이 DB를 아예 못 연다. v2·v3(`createTable`)·v4(`DELETE`)는 모두 멱등이었고 **v5만 아니었다**. 재실행 경로는 ①마이그레이션 중간 종료(컬럼은 남고 `user_version`은 4) ②`OpeningDetails.hadUpgrade`가 버전 '불일치'라 다운그레이드도 `onUpgrade(5→4)`를 부르는데 분기가 전부 `from < N`이라 버전만 내려감 — 두 가지다. `PRAGMA table_info(sessions)`로 실제 컬럼을 확인한 뒤에만 추가하도록 고쳤다.
+- **🟡 세션 저장·삭제가 `void`라 오류가 호출부로 전달되지 않았다**(`751f66f`). 패턴 자체는 기존 결함이나, 세션 저장이 normal 전용에서 전 모드로 넓어지며 "제출한 시험이 이어풀기로 남는" 상태가 도달 가능해졌다. `Future<void>`로 바꿔 이미 `async`인 `select()`·`submit()`에서만 await 하고, `submit()`은 삭제 후에 `finished`를 반영한다. 동기 `next()`는 View 호출부 파급을 피해 시그니처를 유지하고 `unawaited`로 의도만 명시했다. **로거는 만들지 않았다** — 이 프로젝트엔 로깅 인프라가 없어 도입하면 스코프 확장이다.
+
+회귀 테스트 2건은 **수정 전 코드에서 실패(`+2 -2`)하고 수정 후 통과(`+4`)하는 것을 실제로 확인**했다. 게이트: `flutter analyze` 0건 · `flutter test` 108개 통과(106 → +2).
+
+---
+
+## 배포 기록 — 1.0.0+3 (2026-08-03)
+
+PR #13 반영분을 iOS·Android 동시 배포. 대상·경로는 1.0.0+2와 **동일**(앱 ID·테스터 3명·`--testers` 직접 지정 방식 그대로).
+
+- **버전**: `1.0.0+3` (직전 `1.0.0+2`, 2026-07-27)
+- **iOS**: ad-hoc IPA **17.4MB** (직전 16MB) · 릴리스 `3nv3a1a7h4q4g`
+- **Android**: release APK **64.6MB** (직전 61MB, 여전히 **debug 키 서명**) · 릴리스 `5s0l44ud3g3e8`
+- **게이트**: `flutter analyze` 0건 · `flutter test` **108개 통과**
+- 재현 명령·앱 ID·테스터 이메일·iOS ad-hoc UDID 제약은 §배포 기록 1.0.0+2와 같다 — 그쪽이 정본이다.
+
+**배포 후 처리**: `flutter build ipa`가 되쓴 `ios/Runner.xcodeproj/project.pbxproj`(`objectVersion` 60→54)를 `git checkout --`로 되돌렸고, worker를 `launchctl kickstart -k`로 재기동해 기동 로그(`worker up (claude→codex 폴백)…`)를 확인했다.
