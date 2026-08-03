@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../di.dart';
@@ -54,7 +56,7 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     if (s.isExam) {
       state = AsyncData(s.copyWith(answers: answers));
       // 제출 전까지 임시저장 → 도중에 나가도 고른 답이 남는다.
-      _saveSession(s.index, answers, s.questions);
+      await _saveSession(s.index, answers, s.questions);
       return;
     }
 
@@ -68,12 +70,14 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     }
     state = AsyncData(s.copyWith(answers: answers));
     // 선택 즉시 세션에 반영 → 재진입 시 이 답·해설이 복원된다.
-    _saveSession(s.index, answers, s.questions);
+    await _saveSession(s.index, answers, s.questions);
   }
 
   /// 다음 문항으로.
   /// - exam: 채점 없이 전진(마지막 문항은 submit으로만 종료).
   /// - normal 계열: 해설을 본 뒤에만 전진, 마지막이면 종료.
+  ///
+  /// 동기 API를 유지하려고 세션 작업을 의도적으로 await하지 않는다(unawaited).
   void next() {
     final s = state.value;
     if (s == null || s.finished) return;
@@ -82,21 +86,21 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
       if (s.isLast) return;
       final nextIndex = s.index + 1;
       state = AsyncData(s.copyWith(index: nextIndex));
-      _saveSession(nextIndex, s.answers, s.questions);
+      unawaited(_saveSession(nextIndex, s.answers, s.questions));
       return;
     }
 
     if (!s.revealed) return;
     if (s.isLast) {
       state = AsyncData(s.copyWith(finished: true));
-      _clearSession();
+      unawaited(_clearSession());
     } else {
       final nextIndex = s.index + 1;
       state = AsyncData(s.copyWith(index: nextIndex));
       // 아직 안 푼 새 문항으로 나아갈 때만 이어풀기 위치를 전진 저장.
       // 뒤로 갔다 되돌아오는 중이면 최전방 위치를 유지한다.
       if (s.answers[nextIndex] == null) {
-        _saveSession(nextIndex, s.answers, s.questions);
+        unawaited(_saveSession(nextIndex, s.answers, s.questions));
       }
     }
   }
@@ -120,14 +124,18 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
         (question: s.questions[i], selectedIndex: s.answers[i] ?? -1),
     ];
     await ref.read(submitAnswerProvider).submitAll(entries);
+    await _clearSession();
     state = AsyncData(s.copyWith(finished: true));
-    _clearSession();
   }
 
   /// ai 모드는 세션을 쓰지 않는다(문항별 응답 기록이 곧 진행 상태).
-  void _saveSession(int index, List<int?> answers, List<Question> questions) {
+  Future<void> _saveSession(
+    int index,
+    List<int?> answers,
+    List<Question> questions,
+  ) async {
     if (arg.mode == QuizMode.ai) return;
-    ref.read(saveSessionPositionProvider)(
+    await ref.read(saveSessionPositionProvider)(
       arg.categoryId,
       arg.mode,
       lastIndex: index,
@@ -136,8 +144,8 @@ class QuizViewModel extends AutoDisposeFamilyAsyncNotifier<QuizState, QuizArgs> 
     );
   }
 
-  void _clearSession() {
+  Future<void> _clearSession() async {
     if (arg.mode == QuizMode.ai) return;
-    ref.read(clearSessionProvider)(arg.categoryId, arg.mode);
+    await ref.read(clearSessionProvider)(arg.categoryId, arg.mode);
   }
 }
