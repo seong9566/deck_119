@@ -131,8 +131,19 @@ class AppDatabase extends _$AppDatabase {
           // v5: 세션을 전 모드로 확장 + AI 풀이 기록 테이블 추가.
           // 기존 행은 key가 이미 ":normal"이라 mode 기본값과 일치 → 삭제하지 않는다.
           if (from < 5) {
-            await m.addColumn(sessions, sessions.mode);
-            await m.addColumn(sessions, sessions.questionIds);
+            // 중간 실패나 다운그레이드 후 재실행 시 일부 컬럼이 이미 남아 있을 수 있다.
+            // SQLite의 ADD COLUMN은 IF NOT EXISTS를 지원하지 않으므로 실제 컬럼만 추가한다.
+            final columns = await m.database
+                .customSelect('PRAGMA table_info(sessions)')
+                .get();
+            final columnNames =
+                columns.map((row) => row.read<String>('name')).toSet();
+            if (!columnNames.contains('mode')) {
+              await m.addColumn(sessions, sessions.mode);
+            }
+            if (!columnNames.contains('question_ids')) {
+              await m.addColumn(sessions, sessions.questionIds);
+            }
             await m.createTable(aiAnswers);
           }
         },

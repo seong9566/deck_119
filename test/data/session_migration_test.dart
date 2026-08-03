@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:deck_119/data/datasources/local/app_database.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,5 +52,52 @@ void main() {
 
     expect(await db.select(db.aiAnswers).get(), isEmpty);
     await db.close();
+  });
+
+  test('v4→v5: 중간 실패 후 재실행해도 나머지 스키마를 완성한다', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory(setup: (raw) {
+      raw.execute('''
+        CREATE TABLE sessions (
+          key TEXT NOT NULL,
+          subject_id TEXT NOT NULL,
+          last_index INTEGER NOT NULL,
+          answers TEXT NOT NULL,
+          updated_at_ms INTEGER NOT NULL,
+          PRIMARY KEY (key)
+        )
+      ''');
+      raw.execute(
+        "ALTER TABLE sessions ADD COLUMN mode TEXT NOT NULL DEFAULT 'normal'",
+      );
+      raw.execute('PRAGMA user_version = 4');
+    }));
+
+    final rows = await db.select(db.sessions).get();
+    expect(rows, isEmpty);
+    expect(await db.select(db.aiAnswers).get(), isEmpty);
+    await db.close();
+  });
+
+  test('v5→v4→v5: 기존 sessions 행을 보존하며 재업그레이드한다', () async {
+    final dir = await Directory.systemTemp.createTemp('session_migration');
+    final file = File('${dir.path}/session.sqlite');
+    addTearDown(() {
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+    });
+
+    final db1 = AppDatabase.forTesting(NativeDatabase(file));
+    await db1.select(db1.sessions).get();
+    await db1.customStatement(
+      "INSERT INTO sessions "
+      "VALUES ('s1:normal', 's1', 'normal', '', 3, '0,1,2,-1', 100)",
+    );
+    await db1.customStatement('PRAGMA user_version = 4');
+    await db1.close();
+
+    final db2 = AppDatabase.forTesting(NativeDatabase(file));
+    final rows = await db2.select(db2.sessions).get();
+    expect(rows.length, 1);
+    expect(rows.first.key, 's1:normal');
+    await db2.close();
   });
 }
