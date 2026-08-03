@@ -232,8 +232,29 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 
 ### 정직 보고 — 하지 않은 것
 
-- **AI 실제 생성은 돌리지 않았다.** 로컬 worker가 Firestore watch 에러로 멈춰 있어(이번 변경과 무관한 인프라 이슈) 에뮬레이터 `generated_questions`에 테스트 문항 5건을 sqlite로 직접 주입해 UI 흐름만 확인했다. 생성 → 적립 경로 자체는 이번에 건드리지 않았다.
+- ~~**AI 실제 생성은 돌리지 않았다.**~~ → **2026-08-03 해소.** 아래 §실제 생성 경로 e2e 검증 참조. (당시 기록의 "로컬 worker가 Firestore watch 에러로 멈춰 있다"는 **사실이 아니었다** — 8/03 실측 시 worker는 7/27부터 재시작 없이 정상 가동 중이었고 로그에 `watch error` 문구는 0건, `gen_requests`에 밀린 pending도 0건이었다. 7/31 이후 요청 자체가 없어 조용했던 것을 멈춘 것으로 오판했다.)
 - **iOS 미확인.** 검증은 Android 에뮬레이터 한 대에서만 했다.
 - 에뮬레이터에는 테스트 데이터(`ai-seed-1`~`5`, 세션 2건)가 남아 있다. 지우려면 앱 데이터 삭제(`adb shell pm clear com.seong.deck119`).
 - 기존 `session_migration_test`의 v3→v4 케이스는 `onUpgrade(3, 4)`를 수동 호출하는 방식이었는데, 마이그레이션이 `to`가 아니라 `from`만 검사하는 구조라 v5 블록까지 실행돼 깨졌다. 실제 경로(v3 DB를 열면 3→5로 한 번에 간다)를 검증하도록 테스트를 다시 썼다.
 - 테스트에서 `autoDispose` 파기 타이밍이 실기와 달라, AI 재진입 테스트는 `container.invalidate(quizViewModelProvider(args))`로 화면 이탈을 모사한다.
+
+### 실제 생성 경로 e2e 검증 (Android 15 / Medium_Phone_API_35, 2026-08-03)
+
+앞선 검증이 sqlite 주입 데이터였던 것과 달리, **앱 UI에서 실제로 AI 생성을 2회 돌려** 생성 → 적립 → 풀이 기록 → 이어풀기를 통으로 확인했다. 앱 미설치 클린 AVD에서 시작(실기기는 배포판 v1.0.0이 깔려 있어 디버그 빌드 설치 시 서명 불일치로 데이터가 지워지므로 제외).
+
+| 확인 항목 | 결과 |
+|---|---|
+| 요청 제출 | 앱 → `gen_requests` doc 생성 → worker가 즉시 claim (1차 `IwjWjXsi3PEz5cHVpa6a` mcq×10, 2차 `ycyiJ8FrelS8fWh128sR` ox×10) |
+| 적립 | `generated_questions` 10 → 20건, 생성순(ASC) 정렬로 새 문항이 **뒤에** 쌓임 |
+| 홈 카드 | `누적 10 · 미풀이 10` → 3문항 풀이 후 `미풀이 7` → 10문항 추가 발급 후 `누적 20 · 미풀이 17` |
+| 첫 진입 | 푼 문항 0이면 다이얼로그 없이 1번부터 |
+| 선택 즉시 저장 | 이탈 확정 **전에** 이미 `ai_answers` 3행 기록됨 |
+| 재진입 다이얼로그 | `20문항 중 3문항을 풀었어요` + 초기화 경고 문구 |
+| **문제 1 회귀** | 이어풀기 → **4/20**(첫 미풀이). 새 10문항 발급 후에도 기존 3문항 기록 유지, 위치도 안 밀림 |
+| 복습 | '이전'으로 3번 이동 시 선택·정답·해설 완전 복원 |
+| 통계 오염 | `attempt_records` 0건, 홈 `푼 문제 0` — ADR-0002 유지 |
+| 스키마 | 신규 설치 `PRAGMA user_version` = 5 |
+
+**발견(미수정, 이번 범위 밖)**: `worker/index.js`의 `onSnapshot` 에러 콜백이 `console.error`만 하고 재구독하지 않는다. Firestore Node SDK는 이 콜백이 발화하는 순간 리스너를 영구 종료하므로, 한 번 발생하면 프로세스는 살아 있는 채로 요청을 영영 못 받는다(로그를 안 보면 감지 불가). 재구독 또는 주기적 pending 폴링 안전망이 필요하다.
+
+**잔여 테스트 데이터**: Firestore `gen_requests`에 이번 검증 doc 3건(`3g6luOY7eBQj3f5r99jc` 직접 투입 1건 + 앱 요청 2건). 에뮬레이터는 종료했고 앱 데이터는 그대로다.
