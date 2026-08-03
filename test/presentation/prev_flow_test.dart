@@ -20,6 +20,8 @@ void main() {
           questionRepositoryProvider
               .overrideWithValue(FakeQuestionRepository(questions)),
           progressRepositoryProvider.overrideWithValue(FakeProgressRepository()),
+          sessionRepositoryProvider
+              .overrideWithValue(FakeSessionRepository()),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
@@ -109,7 +111,8 @@ void main() {
       (tester) async {
     final session = FakeSessionRepository();
     // Q1·Q2를 정답으로 풀어둔 상태에서 Q3(index 2)부터 이어풀기
-    await session.save('s1', 2, [0, 0, null]);
+    await session.save('s1', QuizMode.normal,
+        lastIndex: 2, answers: [0, 0, null], questionIds: const []);
 
     await tester.pumpWidget(normalHost(session, resume: true));
     await tester.pumpAndSettle();

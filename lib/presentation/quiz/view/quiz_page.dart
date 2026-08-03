@@ -524,15 +524,19 @@ class _ResultView extends StatelessWidget {
                               label: '홈으로',
                               onPressed: () => _closeToHome(context)),
                         ),
-                        const SizedBox(width: AppSpacing.sm + 2),
-                        Expanded(
-                          flex: 3,
-                          child: PrimaryButton(
-                              label: state.mode == QuizMode.quick
-                                  ? '다시 10문제'
-                                  : '다시 풀기',
-                              onPressed: onRetry),
-                        ),
+                        // ai는 시작 방식(이어풀기/처음부터)을 홈의 문제함 진입에서
+                        // 정한다 — 여기서 다시 풀면 이미 채점된 답이 그대로 보인다.
+                        if (state.mode != QuizMode.ai) ...[
+                          const SizedBox(width: AppSpacing.sm + 2),
+                          Expanded(
+                            flex: 3,
+                            child: PrimaryButton(
+                                label: state.mode == QuizMode.quick
+                                    ? '다시 10문제'
+                                    : '다시 풀기',
+                                onPressed: onRetry),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -606,3 +610,4 @@ class _PerfectCard extends StatelessWidget {
     );
   }
 }
+

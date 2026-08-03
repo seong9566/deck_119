@@ -10,25 +10,32 @@ import 'data/datasources/content_data_source.dart';
 import 'data/repositories/ai_question_repository_impl.dart';
 import 'domain/repositories/ai_question_repository.dart';
 import 'data/datasources/local/app_database.dart';
+import 'data/datasources/local/drift_ai_answer_data_source.dart';
 import 'data/datasources/local/drift_generated_data_source.dart';
 import 'data/datasources/local/drift_pending_ai_data_source.dart';
 import 'data/datasources/local/drift_progress_data_source.dart';
 import 'data/datasources/local/drift_session_data_source.dart';
 import 'data/datasources/local/drift_settings_data_source.dart';
+import 'data/repositories/ai_answer_repository_impl.dart';
 import 'data/repositories/generated_question_repository_impl.dart';
 import 'data/repositories/progress_repository_impl.dart';
 import 'data/repositories/question_repository_impl.dart';
 import 'data/repositories/session_repository_impl.dart';
 import 'data/repositories/settings_repository_impl.dart';
+import 'domain/repositories/ai_answer_repository.dart';
 import 'domain/repositories/generated_question_repository.dart';
 import 'domain/repositories/progress_repository.dart';
 import 'domain/repositories/question_repository.dart';
 import 'domain/repositories/session_repository.dart';
 import 'domain/repositories/settings_repository.dart';
 import 'domain/usecases/clear_session.dart';
+import 'domain/usecases/get_ai_quiz_set.dart';
 import 'domain/usecases/get_question_set.dart';
+import 'domain/usecases/get_quiz_session.dart';
 import 'domain/usecases/get_resume_info.dart';
 import 'domain/usecases/get_theme_mode.dart';
+import 'domain/usecases/record_ai_answer.dart';
+import 'domain/usecases/reset_ai_answers.dart';
 import 'domain/usecases/save_session_position.dart';
 import 'domain/usecases/set_theme_mode.dart';
 import 'domain/usecases/submit_answer.dart';
@@ -60,6 +67,8 @@ final _generatedDataSourceProvider =
     Provider((ref) => DriftGeneratedDataSource(ref.watch(appDatabaseProvider)));
 final _pendingAiDataSourceProvider =
     Provider((ref) => DriftPendingAiDataSource(ref.watch(appDatabaseProvider)));
+final _aiAnswerDataSourceProvider =
+    Provider((ref) => DriftAiAnswerDataSource(ref.watch(appDatabaseProvider)));
 
 // Repository (port ← impl)
 final questionRepositoryProvider = Provider<QuestionRepository>(
@@ -95,6 +104,11 @@ final generatedQuestionRepositoryProvider =
       GeneratedQuestionRepositoryImpl(ref.watch(_generatedDataSourceProvider)),
 );
 
+/// AI 생성 문항 풀이 기록(통계·오답노트와 분리된 저장소).
+final aiAnswerRepositoryProvider = Provider<AiAnswerRepository>(
+  (ref) => AiAnswerRepositoryImpl(ref.watch(_aiAnswerDataSourceProvider)),
+);
+
 // UseCase
 final getQuestionSetProvider = Provider(
   (ref) => GetQuestionSet(
@@ -104,6 +118,25 @@ final getQuestionSetProvider = Provider(
 );
 final submitAnswerProvider = Provider(
   (ref) => SubmitAnswer(ref.watch(progressRepositoryProvider)),
+);
+final getQuizSessionProvider = Provider(
+  (ref) => GetQuizSession(
+    ref.watch(questionRepositoryProvider),
+    ref.watch(getQuestionSetProvider),
+    ref.watch(sessionRepositoryProvider),
+  ),
+);
+final getAiQuizSetProvider = Provider(
+  (ref) => GetAiQuizSet(
+    ref.watch(generatedQuestionRepositoryProvider),
+    ref.watch(aiAnswerRepositoryProvider),
+  ),
+);
+final recordAiAnswerProvider = Provider(
+  (ref) => RecordAiAnswer(ref.watch(aiAnswerRepositoryProvider)),
+);
+final resetAiAnswersProvider = Provider(
+  (ref) => ResetAiAnswers(ref.watch(aiAnswerRepositoryProvider)),
 );
 final getResumeInfoProvider = Provider(
   (ref) => GetResumeInfo(

@@ -4,6 +4,7 @@ import '../../../di.dart';
 import '../../../domain/entities/progress_stats.dart';
 import '../../../domain/entities/question.dart';
 import '../../../domain/entities/question_category.dart';
+import '../../../domain/entities/quiz_mode.dart';
 import '../../../domain/entities/resume_info.dart';
 import '../../../domain/entities/subject.dart';
 
@@ -77,6 +78,11 @@ final aiBankCountProvider = StreamProvider.autoDispose<int>((ref) {
   return ref.watch(generatedQuestionRepositoryProvider).watchCount('fire-law');
 });
 
+/// AI 문제함에서 아직 풀지 않은 문항 수(실시간). 홈 카드 부제에 노출.
+final aiUnsolvedCountProvider = StreamProvider.autoDispose<int>((ref) {
+  return ref.watch(aiAnswerRepositoryProvider).watchUnsolvedCount('fire-law');
+});
+
 /// 회수 안전망: 홈 진입 시 타임아웃으로 못 받았던 완료분을 적립함에 흡수한다.
 /// 반환=이번에 회수된 문항 수. 저장하면 aiBankCountProvider가 자동 갱신된다.
 final aiRecoveryProvider = FutureProvider.autoDispose<int>((ref) async {
@@ -92,11 +98,15 @@ final aiRecoveryProvider = FutureProvider.autoDispose<int>((ref) async {
 class RecentSessionCard {
   final String collectionId;
   final String name;
+
+  /// 어떤 모드로 풀던 세션인가 — 카드 라벨과 재진입 링크에 쓴다.
+  final QuizMode mode;
   final int position; // 1-based
   final int total;
   const RecentSessionCard({
     required this.collectionId,
     required this.name,
+    required this.mode,
     required this.position,
     required this.total,
   });
@@ -121,11 +131,14 @@ final recentSessionCardProvider =
       }
     }
     if (col == null) return null; // 세트 구성 변경 등으로 매칭 실패
+    // 랜덤·빠른10·오답 세트는 카테고리 전체가 아니라 세션에 담긴 수가 분모.
+    final total = s.total > 0 ? s.total : col.count;
     return RecentSessionCard(
       collectionId: col.id,
       name: col.name,
-      position: s.lastIndex + 1,
-      total: col.count,
+      mode: s.mode,
+      position: (s.lastIndex + 1).clamp(1, total),
+      total: total,
     );
   });
 });

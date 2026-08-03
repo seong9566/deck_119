@@ -23,6 +23,8 @@ void main() {
           questionRepositoryProvider
               .overrideWithValue(FakeQuestionRepository(questions)),
           progressRepositoryProvider.overrideWithValue(progress),
+          sessionRepositoryProvider
+              .overrideWithValue(FakeSessionRepository()),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),

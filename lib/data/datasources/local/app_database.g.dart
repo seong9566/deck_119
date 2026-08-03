@@ -772,6 +772,28 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _modeMeta = const VerificationMeta('mode');
+  @override
+  late final GeneratedColumn<String> mode = GeneratedColumn<String>(
+    'mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('normal'),
+  );
+  static const VerificationMeta _questionIdsMeta = const VerificationMeta(
+    'questionIds',
+  );
+  @override
+  late final GeneratedColumn<String> questionIds = GeneratedColumn<String>(
+    'question_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _lastIndexMeta = const VerificationMeta(
     'lastIndex',
   );
@@ -809,6 +831,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   List<GeneratedColumn> get $columns => [
     key,
     subjectId,
+    mode,
+    questionIds,
     lastIndex,
     answers,
     updatedAtMs,
@@ -840,6 +864,21 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       );
     } else if (isInserting) {
       context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('mode')) {
+      context.handle(
+        _modeMeta,
+        mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
+      );
+    }
+    if (data.containsKey('question_ids')) {
+      context.handle(
+        _questionIdsMeta,
+        questionIds.isAcceptableOrUnknown(
+          data['question_ids']!,
+          _questionIdsMeta,
+        ),
+      );
     }
     if (data.containsKey('last_index')) {
       context.handle(
@@ -885,6 +924,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}subject_id'],
       )!,
+      mode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mode'],
+      )!,
+      questionIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}question_ids'],
+      )!,
       lastIndex: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_index'],
@@ -909,12 +956,16 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
 class Session extends DataClass implements Insertable<Session> {
   final String key;
   final String subjectId;
+  final String mode;
+  final String questionIds;
   final int lastIndex;
   final String answers;
   final int updatedAtMs;
   const Session({
     required this.key,
     required this.subjectId,
+    required this.mode,
+    required this.questionIds,
     required this.lastIndex,
     required this.answers,
     required this.updatedAtMs,
@@ -924,6 +975,8 @@ class Session extends DataClass implements Insertable<Session> {
     final map = <String, Expression>{};
     map['key'] = Variable<String>(key);
     map['subject_id'] = Variable<String>(subjectId);
+    map['mode'] = Variable<String>(mode);
+    map['question_ids'] = Variable<String>(questionIds);
     map['last_index'] = Variable<int>(lastIndex);
     map['answers'] = Variable<String>(answers);
     map['updated_at_ms'] = Variable<int>(updatedAtMs);
@@ -934,6 +987,8 @@ class Session extends DataClass implements Insertable<Session> {
     return SessionsCompanion(
       key: Value(key),
       subjectId: Value(subjectId),
+      mode: Value(mode),
+      questionIds: Value(questionIds),
       lastIndex: Value(lastIndex),
       answers: Value(answers),
       updatedAtMs: Value(updatedAtMs),
@@ -948,6 +1003,8 @@ class Session extends DataClass implements Insertable<Session> {
     return Session(
       key: serializer.fromJson<String>(json['key']),
       subjectId: serializer.fromJson<String>(json['subjectId']),
+      mode: serializer.fromJson<String>(json['mode']),
+      questionIds: serializer.fromJson<String>(json['questionIds']),
       lastIndex: serializer.fromJson<int>(json['lastIndex']),
       answers: serializer.fromJson<String>(json['answers']),
       updatedAtMs: serializer.fromJson<int>(json['updatedAtMs']),
@@ -959,6 +1016,8 @@ class Session extends DataClass implements Insertable<Session> {
     return <String, dynamic>{
       'key': serializer.toJson<String>(key),
       'subjectId': serializer.toJson<String>(subjectId),
+      'mode': serializer.toJson<String>(mode),
+      'questionIds': serializer.toJson<String>(questionIds),
       'lastIndex': serializer.toJson<int>(lastIndex),
       'answers': serializer.toJson<String>(answers),
       'updatedAtMs': serializer.toJson<int>(updatedAtMs),
@@ -968,12 +1027,16 @@ class Session extends DataClass implements Insertable<Session> {
   Session copyWith({
     String? key,
     String? subjectId,
+    String? mode,
+    String? questionIds,
     int? lastIndex,
     String? answers,
     int? updatedAtMs,
   }) => Session(
     key: key ?? this.key,
     subjectId: subjectId ?? this.subjectId,
+    mode: mode ?? this.mode,
+    questionIds: questionIds ?? this.questionIds,
     lastIndex: lastIndex ?? this.lastIndex,
     answers: answers ?? this.answers,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
@@ -982,6 +1045,10 @@ class Session extends DataClass implements Insertable<Session> {
     return Session(
       key: data.key.present ? data.key.value : this.key,
       subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      mode: data.mode.present ? data.mode.value : this.mode,
+      questionIds: data.questionIds.present
+          ? data.questionIds.value
+          : this.questionIds,
       lastIndex: data.lastIndex.present ? data.lastIndex.value : this.lastIndex,
       answers: data.answers.present ? data.answers.value : this.answers,
       updatedAtMs: data.updatedAtMs.present
@@ -995,6 +1062,8 @@ class Session extends DataClass implements Insertable<Session> {
     return (StringBuffer('Session(')
           ..write('key: $key, ')
           ..write('subjectId: $subjectId, ')
+          ..write('mode: $mode, ')
+          ..write('questionIds: $questionIds, ')
           ..write('lastIndex: $lastIndex, ')
           ..write('answers: $answers, ')
           ..write('updatedAtMs: $updatedAtMs')
@@ -1003,14 +1072,23 @@ class Session extends DataClass implements Insertable<Session> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(key, subjectId, lastIndex, answers, updatedAtMs);
+  int get hashCode => Object.hash(
+    key,
+    subjectId,
+    mode,
+    questionIds,
+    lastIndex,
+    answers,
+    updatedAtMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Session &&
           other.key == this.key &&
           other.subjectId == this.subjectId &&
+          other.mode == this.mode &&
+          other.questionIds == this.questionIds &&
           other.lastIndex == this.lastIndex &&
           other.answers == this.answers &&
           other.updatedAtMs == this.updatedAtMs);
@@ -1019,6 +1097,8 @@ class Session extends DataClass implements Insertable<Session> {
 class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String> key;
   final Value<String> subjectId;
+  final Value<String> mode;
+  final Value<String> questionIds;
   final Value<int> lastIndex;
   final Value<String> answers;
   final Value<int> updatedAtMs;
@@ -1026,6 +1106,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   const SessionsCompanion({
     this.key = const Value.absent(),
     this.subjectId = const Value.absent(),
+    this.mode = const Value.absent(),
+    this.questionIds = const Value.absent(),
     this.lastIndex = const Value.absent(),
     this.answers = const Value.absent(),
     this.updatedAtMs = const Value.absent(),
@@ -1034,6 +1116,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   SessionsCompanion.insert({
     required String key,
     required String subjectId,
+    this.mode = const Value.absent(),
+    this.questionIds = const Value.absent(),
     required int lastIndex,
     required String answers,
     required int updatedAtMs,
@@ -1046,6 +1130,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   static Insertable<Session> custom({
     Expression<String>? key,
     Expression<String>? subjectId,
+    Expression<String>? mode,
+    Expression<String>? questionIds,
     Expression<int>? lastIndex,
     Expression<String>? answers,
     Expression<int>? updatedAtMs,
@@ -1054,6 +1140,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     return RawValuesInsertable({
       if (key != null) 'key': key,
       if (subjectId != null) 'subject_id': subjectId,
+      if (mode != null) 'mode': mode,
+      if (questionIds != null) 'question_ids': questionIds,
       if (lastIndex != null) 'last_index': lastIndex,
       if (answers != null) 'answers': answers,
       if (updatedAtMs != null) 'updated_at_ms': updatedAtMs,
@@ -1064,6 +1152,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   SessionsCompanion copyWith({
     Value<String>? key,
     Value<String>? subjectId,
+    Value<String>? mode,
+    Value<String>? questionIds,
     Value<int>? lastIndex,
     Value<String>? answers,
     Value<int>? updatedAtMs,
@@ -1072,6 +1162,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     return SessionsCompanion(
       key: key ?? this.key,
       subjectId: subjectId ?? this.subjectId,
+      mode: mode ?? this.mode,
+      questionIds: questionIds ?? this.questionIds,
       lastIndex: lastIndex ?? this.lastIndex,
       answers: answers ?? this.answers,
       updatedAtMs: updatedAtMs ?? this.updatedAtMs,
@@ -1087,6 +1179,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     }
     if (subjectId.present) {
       map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (mode.present) {
+      map['mode'] = Variable<String>(mode.value);
+    }
+    if (questionIds.present) {
+      map['question_ids'] = Variable<String>(questionIds.value);
     }
     if (lastIndex.present) {
       map['last_index'] = Variable<int>(lastIndex.value);
@@ -1108,6 +1206,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     return (StringBuffer('SessionsCompanion(')
           ..write('key: $key, ')
           ..write('subjectId: $subjectId, ')
+          ..write('mode: $mode, ')
+          ..write('questionIds: $questionIds, ')
           ..write('lastIndex: $lastIndex, ')
           ..write('answers: $answers, ')
           ..write('updatedAtMs: $updatedAtMs, ')
@@ -1953,6 +2053,394 @@ class PendingAiRequestsCompanion extends UpdateCompanion<PendingAiRequest> {
   }
 }
 
+class $AiAnswersTable extends AiAnswers
+    with TableInfo<$AiAnswersTable, AiAnswer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiAnswersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _questionIdMeta = const VerificationMeta(
+    'questionId',
+  );
+  @override
+  late final GeneratedColumn<String> questionId = GeneratedColumn<String>(
+    'question_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectIdMeta = const VerificationMeta(
+    'subjectId',
+  );
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+    'subject_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _selectedIndexMeta = const VerificationMeta(
+    'selectedIndex',
+  );
+  @override
+  late final GeneratedColumn<int> selectedIndex = GeneratedColumn<int>(
+    'selected_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isCorrectMeta = const VerificationMeta(
+    'isCorrect',
+  );
+  @override
+  late final GeneratedColumn<bool> isCorrect = GeneratedColumn<bool>(
+    'is_correct',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_correct" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _answeredAtMsMeta = const VerificationMeta(
+    'answeredAtMs',
+  );
+  @override
+  late final GeneratedColumn<int> answeredAtMs = GeneratedColumn<int>(
+    'answered_at_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    questionId,
+    subjectId,
+    selectedIndex,
+    isCorrect,
+    answeredAtMs,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_answers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AiAnswer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('question_id')) {
+      context.handle(
+        _questionIdMeta,
+        questionId.isAcceptableOrUnknown(data['question_id']!, _questionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_questionIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(
+        _subjectIdMeta,
+        subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('selected_index')) {
+      context.handle(
+        _selectedIndexMeta,
+        selectedIndex.isAcceptableOrUnknown(
+          data['selected_index']!,
+          _selectedIndexMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_selectedIndexMeta);
+    }
+    if (data.containsKey('is_correct')) {
+      context.handle(
+        _isCorrectMeta,
+        isCorrect.isAcceptableOrUnknown(data['is_correct']!, _isCorrectMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_isCorrectMeta);
+    }
+    if (data.containsKey('answered_at_ms')) {
+      context.handle(
+        _answeredAtMsMeta,
+        answeredAtMs.isAcceptableOrUnknown(
+          data['answered_at_ms']!,
+          _answeredAtMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_answeredAtMsMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {questionId};
+  @override
+  AiAnswer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiAnswer(
+      questionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}question_id'],
+      )!,
+      subjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_id'],
+      )!,
+      selectedIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}selected_index'],
+      )!,
+      isCorrect: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_correct'],
+      )!,
+      answeredAtMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}answered_at_ms'],
+      )!,
+    );
+  }
+
+  @override
+  $AiAnswersTable createAlias(String alias) {
+    return $AiAnswersTable(attachedDatabase, alias);
+  }
+}
+
+class AiAnswer extends DataClass implements Insertable<AiAnswer> {
+  final String questionId;
+  final String subjectId;
+  final int selectedIndex;
+  final bool isCorrect;
+  final int answeredAtMs;
+  const AiAnswer({
+    required this.questionId,
+    required this.subjectId,
+    required this.selectedIndex,
+    required this.isCorrect,
+    required this.answeredAtMs,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['question_id'] = Variable<String>(questionId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['selected_index'] = Variable<int>(selectedIndex);
+    map['is_correct'] = Variable<bool>(isCorrect);
+    map['answered_at_ms'] = Variable<int>(answeredAtMs);
+    return map;
+  }
+
+  AiAnswersCompanion toCompanion(bool nullToAbsent) {
+    return AiAnswersCompanion(
+      questionId: Value(questionId),
+      subjectId: Value(subjectId),
+      selectedIndex: Value(selectedIndex),
+      isCorrect: Value(isCorrect),
+      answeredAtMs: Value(answeredAtMs),
+    );
+  }
+
+  factory AiAnswer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiAnswer(
+      questionId: serializer.fromJson<String>(json['questionId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      selectedIndex: serializer.fromJson<int>(json['selectedIndex']),
+      isCorrect: serializer.fromJson<bool>(json['isCorrect']),
+      answeredAtMs: serializer.fromJson<int>(json['answeredAtMs']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'questionId': serializer.toJson<String>(questionId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'selectedIndex': serializer.toJson<int>(selectedIndex),
+      'isCorrect': serializer.toJson<bool>(isCorrect),
+      'answeredAtMs': serializer.toJson<int>(answeredAtMs),
+    };
+  }
+
+  AiAnswer copyWith({
+    String? questionId,
+    String? subjectId,
+    int? selectedIndex,
+    bool? isCorrect,
+    int? answeredAtMs,
+  }) => AiAnswer(
+    questionId: questionId ?? this.questionId,
+    subjectId: subjectId ?? this.subjectId,
+    selectedIndex: selectedIndex ?? this.selectedIndex,
+    isCorrect: isCorrect ?? this.isCorrect,
+    answeredAtMs: answeredAtMs ?? this.answeredAtMs,
+  );
+  AiAnswer copyWithCompanion(AiAnswersCompanion data) {
+    return AiAnswer(
+      questionId: data.questionId.present
+          ? data.questionId.value
+          : this.questionId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      selectedIndex: data.selectedIndex.present
+          ? data.selectedIndex.value
+          : this.selectedIndex,
+      isCorrect: data.isCorrect.present ? data.isCorrect.value : this.isCorrect,
+      answeredAtMs: data.answeredAtMs.present
+          ? data.answeredAtMs.value
+          : this.answeredAtMs,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiAnswer(')
+          ..write('questionId: $questionId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('selectedIndex: $selectedIndex, ')
+          ..write('isCorrect: $isCorrect, ')
+          ..write('answeredAtMs: $answeredAtMs')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    questionId,
+    subjectId,
+    selectedIndex,
+    isCorrect,
+    answeredAtMs,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiAnswer &&
+          other.questionId == this.questionId &&
+          other.subjectId == this.subjectId &&
+          other.selectedIndex == this.selectedIndex &&
+          other.isCorrect == this.isCorrect &&
+          other.answeredAtMs == this.answeredAtMs);
+}
+
+class AiAnswersCompanion extends UpdateCompanion<AiAnswer> {
+  final Value<String> questionId;
+  final Value<String> subjectId;
+  final Value<int> selectedIndex;
+  final Value<bool> isCorrect;
+  final Value<int> answeredAtMs;
+  final Value<int> rowid;
+  const AiAnswersCompanion({
+    this.questionId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.selectedIndex = const Value.absent(),
+    this.isCorrect = const Value.absent(),
+    this.answeredAtMs = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiAnswersCompanion.insert({
+    required String questionId,
+    required String subjectId,
+    required int selectedIndex,
+    required bool isCorrect,
+    required int answeredAtMs,
+    this.rowid = const Value.absent(),
+  }) : questionId = Value(questionId),
+       subjectId = Value(subjectId),
+       selectedIndex = Value(selectedIndex),
+       isCorrect = Value(isCorrect),
+       answeredAtMs = Value(answeredAtMs);
+  static Insertable<AiAnswer> custom({
+    Expression<String>? questionId,
+    Expression<String>? subjectId,
+    Expression<int>? selectedIndex,
+    Expression<bool>? isCorrect,
+    Expression<int>? answeredAtMs,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (questionId != null) 'question_id': questionId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (selectedIndex != null) 'selected_index': selectedIndex,
+      if (isCorrect != null) 'is_correct': isCorrect,
+      if (answeredAtMs != null) 'answered_at_ms': answeredAtMs,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiAnswersCompanion copyWith({
+    Value<String>? questionId,
+    Value<String>? subjectId,
+    Value<int>? selectedIndex,
+    Value<bool>? isCorrect,
+    Value<int>? answeredAtMs,
+    Value<int>? rowid,
+  }) {
+    return AiAnswersCompanion(
+      questionId: questionId ?? this.questionId,
+      subjectId: subjectId ?? this.subjectId,
+      selectedIndex: selectedIndex ?? this.selectedIndex,
+      isCorrect: isCorrect ?? this.isCorrect,
+      answeredAtMs: answeredAtMs ?? this.answeredAtMs,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (questionId.present) {
+      map['question_id'] = Variable<String>(questionId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (selectedIndex.present) {
+      map['selected_index'] = Variable<int>(selectedIndex.value);
+    }
+    if (isCorrect.present) {
+      map['is_correct'] = Variable<bool>(isCorrect.value);
+    }
+    if (answeredAtMs.present) {
+      map['answered_at_ms'] = Variable<int>(answeredAtMs.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiAnswersCompanion(')
+          ..write('questionId: $questionId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('selectedIndex: $selectedIndex, ')
+          ..write('isCorrect: $isCorrect, ')
+          ..write('answeredAtMs: $answeredAtMs, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1964,6 +2452,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $GeneratedQuestionsTable(this);
   late final $PendingAiRequestsTable pendingAiRequests =
       $PendingAiRequestsTable(this);
+  late final $AiAnswersTable aiAnswers = $AiAnswersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1975,6 +2464,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     settings,
     generatedQuestions,
     pendingAiRequests,
+    aiAnswers,
   ];
 }
 
@@ -2386,6 +2876,8 @@ typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
       required String key,
       required String subjectId,
+      Value<String> mode,
+      Value<String> questionIds,
       required int lastIndex,
       required String answers,
       required int updatedAtMs,
@@ -2395,6 +2887,8 @@ typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
       Value<String> key,
       Value<String> subjectId,
+      Value<String> mode,
+      Value<String> questionIds,
       Value<int> lastIndex,
       Value<String> answers,
       Value<int> updatedAtMs,
@@ -2417,6 +2911,16 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get subjectId => $composableBuilder(
     column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get questionIds => $composableBuilder(
+    column: $table.questionIds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2455,6 +2959,16 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get mode => $composableBuilder(
+    column: $table.mode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get questionIds => $composableBuilder(
+    column: $table.questionIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get lastIndex => $composableBuilder(
     column: $table.lastIndex,
     builder: (column) => ColumnOrderings(column),
@@ -2485,6 +2999,14 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<String> get subjectId =>
       $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get mode =>
+      $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<String> get questionIds => $composableBuilder(
+    column: $table.questionIds,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get lastIndex =>
       $composableBuilder(column: $table.lastIndex, builder: (column) => column);
@@ -2528,6 +3050,8 @@ class $$SessionsTableTableManager
               ({
                 Value<String> key = const Value.absent(),
                 Value<String> subjectId = const Value.absent(),
+                Value<String> mode = const Value.absent(),
+                Value<String> questionIds = const Value.absent(),
                 Value<int> lastIndex = const Value.absent(),
                 Value<String> answers = const Value.absent(),
                 Value<int> updatedAtMs = const Value.absent(),
@@ -2535,6 +3059,8 @@ class $$SessionsTableTableManager
               }) => SessionsCompanion(
                 key: key,
                 subjectId: subjectId,
+                mode: mode,
+                questionIds: questionIds,
                 lastIndex: lastIndex,
                 answers: answers,
                 updatedAtMs: updatedAtMs,
@@ -2544,6 +3070,8 @@ class $$SessionsTableTableManager
               ({
                 required String key,
                 required String subjectId,
+                Value<String> mode = const Value.absent(),
+                Value<String> questionIds = const Value.absent(),
                 required int lastIndex,
                 required String answers,
                 required int updatedAtMs,
@@ -2551,6 +3079,8 @@ class $$SessionsTableTableManager
               }) => SessionsCompanion.insert(
                 key: key,
                 subjectId: subjectId,
+                mode: mode,
+                questionIds: questionIds,
                 lastIndex: lastIndex,
                 answers: answers,
                 updatedAtMs: updatedAtMs,
@@ -3089,6 +3619,206 @@ typedef $$PendingAiRequestsTableProcessedTableManager =
       PendingAiRequest,
       PrefetchHooks Function()
     >;
+typedef $$AiAnswersTableCreateCompanionBuilder =
+    AiAnswersCompanion Function({
+      required String questionId,
+      required String subjectId,
+      required int selectedIndex,
+      required bool isCorrect,
+      required int answeredAtMs,
+      Value<int> rowid,
+    });
+typedef $$AiAnswersTableUpdateCompanionBuilder =
+    AiAnswersCompanion Function({
+      Value<String> questionId,
+      Value<String> subjectId,
+      Value<int> selectedIndex,
+      Value<bool> isCorrect,
+      Value<int> answeredAtMs,
+      Value<int> rowid,
+    });
+
+class $$AiAnswersTableFilterComposer
+    extends Composer<_$AppDatabase, $AiAnswersTable> {
+  $$AiAnswersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get selectedIndex => $composableBuilder(
+    column: $table.selectedIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCorrect => $composableBuilder(
+    column: $table.isCorrect,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get answeredAtMs => $composableBuilder(
+    column: $table.answeredAtMs,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AiAnswersTableOrderingComposer
+    extends Composer<_$AppDatabase, $AiAnswersTable> {
+  $$AiAnswersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+    column: $table.subjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get selectedIndex => $composableBuilder(
+    column: $table.selectedIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCorrect => $composableBuilder(
+    column: $table.isCorrect,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get answeredAtMs => $composableBuilder(
+    column: $table.answeredAtMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AiAnswersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AiAnswersTable> {
+  $$AiAnswersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get questionId => $composableBuilder(
+    column: $table.questionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<int> get selectedIndex => $composableBuilder(
+    column: $table.selectedIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isCorrect =>
+      $composableBuilder(column: $table.isCorrect, builder: (column) => column);
+
+  GeneratedColumn<int> get answeredAtMs => $composableBuilder(
+    column: $table.answeredAtMs,
+    builder: (column) => column,
+  );
+}
+
+class $$AiAnswersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AiAnswersTable,
+          AiAnswer,
+          $$AiAnswersTableFilterComposer,
+          $$AiAnswersTableOrderingComposer,
+          $$AiAnswersTableAnnotationComposer,
+          $$AiAnswersTableCreateCompanionBuilder,
+          $$AiAnswersTableUpdateCompanionBuilder,
+          (AiAnswer, BaseReferences<_$AppDatabase, $AiAnswersTable, AiAnswer>),
+          AiAnswer,
+          PrefetchHooks Function()
+        > {
+  $$AiAnswersTableTableManager(_$AppDatabase db, $AiAnswersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AiAnswersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AiAnswersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AiAnswersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> questionId = const Value.absent(),
+                Value<String> subjectId = const Value.absent(),
+                Value<int> selectedIndex = const Value.absent(),
+                Value<bool> isCorrect = const Value.absent(),
+                Value<int> answeredAtMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiAnswersCompanion(
+                questionId: questionId,
+                subjectId: subjectId,
+                selectedIndex: selectedIndex,
+                isCorrect: isCorrect,
+                answeredAtMs: answeredAtMs,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String questionId,
+                required String subjectId,
+                required int selectedIndex,
+                required bool isCorrect,
+                required int answeredAtMs,
+                Value<int> rowid = const Value.absent(),
+              }) => AiAnswersCompanion.insert(
+                questionId: questionId,
+                subjectId: subjectId,
+                selectedIndex: selectedIndex,
+                isCorrect: isCorrect,
+                answeredAtMs: answeredAtMs,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AiAnswersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AiAnswersTable,
+      AiAnswer,
+      $$AiAnswersTableFilterComposer,
+      $$AiAnswersTableOrderingComposer,
+      $$AiAnswersTableAnnotationComposer,
+      $$AiAnswersTableCreateCompanionBuilder,
+      $$AiAnswersTableUpdateCompanionBuilder,
+      (AiAnswer, BaseReferences<_$AppDatabase, $AiAnswersTable, AiAnswer>),
+      AiAnswer,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3105,4 +3835,6 @@ class $AppDatabaseManager {
       $$GeneratedQuestionsTableTableManager(_db, _db.generatedQuestions);
   $$PendingAiRequestsTableTableManager get pendingAiRequests =>
       $$PendingAiRequestsTableTableManager(_db, _db.pendingAiRequests);
+  $$AiAnswersTableTableManager get aiAnswers =>
+      $$AiAnswersTableTableManager(_db, _db.aiAnswers);
 }
